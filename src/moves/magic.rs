@@ -67,7 +67,7 @@ impl Magic {
             let mut r = rank + 1;
             let mut f = file + 1;
             while r < 7 && f < 7 {
-                mask |= Position::bitboard(r, f);
+                mask |= Position::bitboard(f, r);
                 r += 1;
                 f += 1;
             }
@@ -76,7 +76,7 @@ impl Magic {
                 let mut r = rank + 1;
                 let mut f = file - 1;
                 while r < 7 && f > 0 {
-                    mask |= Position::bitboard(r, f);
+                    mask |= Position::bitboard(f, r);
                     r += 1;
                     f -= 1;
                 }
@@ -86,7 +86,7 @@ impl Magic {
                 let mut r = rank - 1;
                 let mut f = file + 1;
                 while r > 0 && f < 7 {
-                    mask |= Position::bitboard(r, f);
+                    mask |= Position::bitboard(f, r);
                     r -= 1;
                     f += 1;
                 }
@@ -96,7 +96,7 @@ impl Magic {
                 let mut r = rank - 1;
                 let mut f = file - 1;
                 while r > 0 && f > 0 {
-                    mask |= Position::bitboard(r, f);
+                    mask |= Position::bitboard(f, r);
                     r -= 1;
                     f -= 1;
                 }
@@ -108,7 +108,7 @@ impl Magic {
         }
     }
 
-    pub fn get_blockers(mask: u64) -> Vec<u64> {
+    pub fn get_occupancy(mask: u64) -> Vec<u64> {
         let mut indices = Vec::with_capacity(64);
 
         for square in 0..64 {
@@ -144,9 +144,9 @@ impl Magic {
             let mut table = vec![0; size];
 
             let mask = self.rook_masks[square];
-            let blocks = Magic::get_blockers(mask);
+            let occupancy = Magic::get_occupancy(mask);
 
-            for block in blocks {
+            for block in occupancy {
                 let index = ((block.wrapping_mul(magic)) >> shift) as usize;
                 let moves = self.get_rook_attacks(square, block);
                 table[index] = moves;
@@ -166,9 +166,9 @@ impl Magic {
             let mut table = vec![0; size];
 
             let mask = self.bishop_masks[square];
-            let blocks = Magic::get_blockers(mask);
+            let occupancy = Magic::get_occupancy(mask);
 
-            for block in blocks {
+            for block in occupancy {
                 let index = ((block.wrapping_mul(magic)) >> shift) as usize;
                 let moves = self.get_bishop_attacks(square, block);
                 table[index] = moves;
@@ -178,49 +178,49 @@ impl Magic {
         }
     }
 
-    pub fn get_rook_attacks(&self, square: usize, blockers: u64) -> u64 {
+    pub fn get_rook_attacks(&self, square: usize, occupancy: u64) -> u64 {
         let mut attacks = 0u64;
         let rank = square / 8;
         let file = square % 8;
 
-        for r in (rank + 1)..7 {
+        for r in (rank + 1)..8 {
             let target = Position::bitboard(file, r);
             attacks |= target;
-            if blockers & target != 0 { break; }
+            if occupancy & target != 0 { break; }
         }
 
-        for r in 1..rank {
+        for r in 0..rank {
             let target = Position::bitboard(file, rank - r);
             attacks |= target;
-            if blockers & target != 0 { break; }
+            if occupancy & target != 0 { break; }
         }
 
-        for f in (file + 1)..7 {
+        for f in (file + 1)..8 {
             let target = Position::bitboard(f, rank);
             attacks |= target;
-            if blockers & target != 0 { break; }
+            if occupancy & target != 0 { break; }
         }
 
-        for f in 1..file {
+        for f in 0..file {
             let target = Position::bitboard(file - f, rank);
             attacks |= target;
-            if blockers & target != 0 { break; }
+            if occupancy & target != 0 { break; }
         }
 
         attacks
     }
 
-    pub fn get_bishop_attacks(&self, square: usize, blockers: u64) -> u64 {
+    pub fn get_bishop_attacks(&self, square: usize, occupancy: u64) -> u64 {
         let mut attacks = 0u64;
         let rank = square / 8;
         let file = square % 8;
 
         let mut r = rank + 1;
         let mut f = file + 1;
-        while r < 7 && f < 7 {
-            let target = Position::bitboard(r, f);
+        while r < 8 && f < 8 {
+            let target = Position::bitboard(f, r);
             attacks |= target;
-            if blockers & target != 0 { break; }
+            if occupancy & target != 0 { break; }
             r += 1;
             f += 1;
         }
@@ -228,10 +228,11 @@ impl Magic {
         if file > 0 {
             let mut r = rank + 1;
             let mut f = file - 1;
-            while r < 7 && f > 0 {
-                let target = Position::bitboard(r, f);
+            while r < 8 {
+                let target = Position::bitboard(f, r);
                 attacks |= target;
-                if blockers & target != 0 { break; }
+                if occupancy & target != 0 { break; }
+                if f == 0 { break; }
                 r += 1;
                 f -= 1;
             }
@@ -240,10 +241,11 @@ impl Magic {
         if rank > 0 {
             let mut r = rank - 1;
             let mut f = file + 1;
-            while r > 0 && f < 7 {
-                let target = Position::bitboard(r, f);
+            while f < 8 {
+                let target = Position::bitboard(f, r);
                 attacks |= target;
-                if blockers & target != 0 { break; }
+                if occupancy & target != 0 { break; }
+                if r == 0 { break; }
                 r -= 1;
                 f += 1;
             }
@@ -252,10 +254,11 @@ impl Magic {
         if rank > 0 && file > 0 {
             let mut r = rank - 1;
             let mut f = file - 1;
-            while r > 0 && f > 0 {
-                let target = Position::bitboard(r, f);
+            loop {
+                let target = Position::bitboard(f, r);
                 attacks |= target;
-                if blockers & target != 0 { break; }
+                if occupancy & target != 0 { break; }
+                if r == 0 || f == 0 { break; }
                 r -= 1;
                 f -= 1;
             }

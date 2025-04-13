@@ -9,7 +9,7 @@ fn find_magics(masks: [u64; 64], shifts: [u64; 64], attacks: [Vec<u64>; 64]) {
         let shift = shifts[square];
 
         let size = 1 << mask.count_ones();
-        let occupancy = Magic::get_blockers(mask);
+        let occupancy = Magic::get_occupancy(mask);
         let attacks = attacks[square].clone();
 
         'ext: for _ in 0..MAX_TRIES {
