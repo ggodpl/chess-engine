@@ -3,7 +3,11 @@ use super::{values::ROOK_MAGICS, Position};
 pub struct Magic {
     pub rook_masks: [u64; 64],
     pub rook_shifts: [u64; 64],
-    pub rook_attacks: [Vec<u64>; 64]
+    pub rook_attacks: [Vec<u64>; 64],
+
+    pub bishop_masks: [u64; 64],
+    pub bishop_shifts: [u64; 64],
+    pub bishop_attacks: [Vec<u64>; 64]
 }
 
 impl Magic {
@@ -11,11 +15,17 @@ impl Magic {
         let mut magic =  Magic {
             rook_masks: [0; 64],
             rook_shifts: [0; 64],
-            rook_attacks: array_init::array_init(|_| Vec::new())
+            rook_attacks: array_init::array_init(|_| Vec::new()),
+            bishop_masks: [0; 64],
+            bishop_shifts: [0; 64],
+            bishop_attacks: array_init::array_init(|_| Vec::new())
         };
 
         magic.gen_rook_masks();
         magic.gen_rook_attacks();
+
+        magic.gen_bishop_masks();
+        magic.gen_bishop_attacks();
 
         magic
     }
@@ -45,6 +55,56 @@ impl Magic {
             self.rook_masks[square] = mask;
 
             self.rook_shifts[square] = 64 - mask.count_ones() as u64;
+        }
+    }
+
+    fn gen_bishop_masks(&mut self) {
+        for square in 0..64 {
+            let mut mask = 0u64;
+            let rank = square / 8;
+            let file = square % 8;
+
+            let mut r = rank + 1;
+            let mut f = file + 1;
+            while r < 7 && f < 7 {
+                mask |= Position::bitboard(r, f);
+                r += 1;
+                f += 1;
+            }
+
+            if file > 0 {
+                let mut r = rank + 1;
+                let mut f = file - 1;
+                while r < 7 && f > 0 {
+                    mask |= Position::bitboard(r, f);
+                    r += 1;
+                    f -= 1;
+                }
+            }
+
+            if rank > 0 {
+                let mut r = rank - 1;
+                let mut f = file + 1;
+                while r > 0 && f < 7 {
+                    mask |= Position::bitboard(r, f);
+                    r -= 1;
+                    f += 1;
+                }
+            }
+
+            if rank > 0 && file > 0 {
+                let mut r = rank - 1;
+                let mut f = file - 1;
+                while r > 0 && f > 0 {
+                    mask |= Position::bitboard(r, f);
+                    r -= 1;
+                    f -= 1;
+                }
+            }
+
+            self.bishop_masks[square] = mask;
+            
+            self.bishop_shifts[square] = 64 - mask.count_ones() as u64;
         }
     }
 
@@ -96,6 +156,28 @@ impl Magic {
         }
     }
 
+    fn gen_bishop_attacks(&mut self) {
+        for square in 0..64 {
+            let magic = 0u64;
+            let shift = self.bishop_shifts[square];
+
+            let bits = 64 - shift;
+            let size = 1 << bits;
+            let mut table = vec![0; size];
+
+            let mask = self.bishop_masks[square];
+            let blocks = Magic::get_blockers(mask);
+
+            for block in blocks {
+                let index = ((block.wrapping_mul(magic)) >> shift) as usize;
+                let moves = self.get_bishop_attacks(square, block);
+                table[index] = moves;
+            }
+
+            self.bishop_attacks[square] = table;
+        }
+    }
+
     pub fn get_rook_attacks(&self, square: usize, blockers: u64) -> u64 {
         let mut attacks = 0u64;
         let rank = square / 8;
@@ -123,6 +205,60 @@ impl Magic {
             let target = Position::bitboard(file - f, rank);
             attacks |= target;
             if blockers & target != 0 { break; }
+        }
+
+        attacks
+    }
+
+    pub fn get_bishop_attacks(&self, square: usize, blockers: u64) -> u64 {
+        let mut attacks = 0u64;
+        let rank = square / 8;
+        let file = square % 8;
+
+        let mut r = rank + 1;
+        let mut f = file + 1;
+        while r < 7 && f < 7 {
+            let target = Position::bitboard(r, f);
+            attacks |= target;
+            if blockers & target != 0 { break; }
+            r += 1;
+            f += 1;
+        }
+
+        if file > 0 {
+            let mut r = rank + 1;
+            let mut f = file - 1;
+            while r < 7 && f > 0 {
+                let target = Position::bitboard(r, f);
+                attacks |= target;
+                if blockers & target != 0 { break; }
+                r += 1;
+                f -= 1;
+            }
+        }
+
+        if rank > 0 {
+            let mut r = rank - 1;
+            let mut f = file + 1;
+            while r > 0 && f < 7 {
+                let target = Position::bitboard(r, f);
+                attacks |= target;
+                if blockers & target != 0 { break; }
+                r -= 1;
+                f += 1;
+            }
+        }
+
+        if rank > 0 && file > 0 {
+            let mut r = rank - 1;
+            let mut f = file - 1;
+            while r > 0 && f > 0 {
+                let target = Position::bitboard(r, f);
+                attacks |= target;
+                if blockers & target != 0 { break; }
+                r -= 1;
+                f -= 1;
+            }
         }
 
         attacks
