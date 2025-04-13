@@ -1,4 +1,4 @@
-use super::{values::ROOK_MAGICS, Position};
+use super::{values::{BISHOP_MAGICS, ROOK_MAGICS}, Position};
 
 pub struct Magic {
     pub rook_masks: [u64; 64],
@@ -158,7 +158,7 @@ impl Magic {
 
     fn gen_bishop_attacks(&mut self) {
         for square in 0..64 {
-            let magic = 0u64;
+            let magic = BISHOP_MAGICS[square];
             let shift = self.bishop_shifts[square];
 
             let bits = 64 - shift;
