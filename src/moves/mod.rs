@@ -2,6 +2,7 @@ use crate::piece::{Piece, PieceType};
 
 pub mod magic;
 pub mod values;
+pub mod gen;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
@@ -26,8 +27,8 @@ impl Position {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Move {
-    pub from: Position,
-    pub to: Position,
+    pub from: u64,
+    pub to: u64,
     pub promotion: Option<PieceType>,
     pub captured: Option<Piece>,
     pub is_castling: bool,

@@ -1,8 +1,8 @@
-use std::i64;
+use std::{fmt::Display, i64, sync::Arc};
 
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
-use crate::{bitboard::Bitboard, moves::Position, piece::{Piece, PieceColor, PieceType}};
+use crate::{bitboard::Bitboard, moves::{magic::Magic, Position}, piece::{Piece, PieceColor, PieceType}};
 
 pub struct Castling {
     white: (bool, bool),
@@ -17,11 +17,12 @@ pub struct Board {
     pub target_square: u64,
     pub hash: i64,
     pub hash_table: [i64; 781],
-    pub castling: Castling
+    pub castling: Castling,
+    pub magic: Arc<Magic>,
 }
 
 impl Board {
-    pub fn new() -> Self {
+    pub fn new(magic: Arc<Magic>) -> Self {
         Board {
             bb: Bitboard::new(),
             turn: PieceColor::White,
@@ -34,11 +35,12 @@ impl Board {
                 white: (true, true),
                 black: (true, true)
             },
+            magic,
         }
     }
 
-    pub fn from_fen(fen: &str) -> Self {
-        let mut board = Board::new();
+    pub fn from_fen(fen: &str, magic: Arc<Magic>) -> Self {
+        let mut board = Board::new(magic);
         let parts: Vec<&str> = fen.split_whitespace().collect();
         let position = parts[0];
         let turn = parts[1];
@@ -114,9 +116,8 @@ impl Board {
         }
 
         for square in 0..64 {
-            let pos = Position::from_bitboard(square);
-
-            if let Some(piece) = self.bb.get_piece_at(&pos) {
+            if let Some(piece) = self.bb.get_piece_at(square) {
+                let pos = Position::from_bitboard(square);
                 hash ^= hash_array[piece.index() * 64 + pos.y * 8 + pos.x];
             }
         }
@@ -139,5 +140,41 @@ impl Board {
 
         self.hash = hash;
         self.hash_table = hash_array;
+    }
+}
+
+impl Display for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "  ")?;
+        for i in 0..8 {
+            write!(f, "{} ", "abcdefgh".chars().nth(i).unwrap())?;
+        }
+        write!(f, "\n")?;
+        for rank in 0..8 {
+            write!(f, "{} ", 8 - rank)?;
+            for file in 0..8 {
+                let piece = self.bb.get_piece_at(Position::bitboard(file, rank));
+                if let Some(piece) = piece {
+                    let piece_char = match piece.piece_type {
+                        PieceType::Pawn => "p",
+                        PieceType::Knight => "n",
+                        PieceType::Bishop => "b",
+                        PieceType::Rook => "r",
+                        PieceType::Queen => "q",
+                        PieceType::King => "k"
+                    };
+                    
+                    write!(f, "{} ", if piece.color == PieceColor::White {
+                        piece_char.to_uppercase()
+                    } else {
+                        piece_char.to_owned()
+                    })?;
+                } else {
+                    write!(f, ". ")?;
+                }
+            }
+            write!(f, "\n")?;
+        }
+        Ok(())
     }
 }

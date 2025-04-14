@@ -266,4 +266,20 @@ impl Magic {
 
         attacks
     }
+
+    pub fn get_rook_moves(&self, square: usize, occupancy: u64) -> u64 {
+        let key = occupancy & self.rook_masks[square];
+        let index = ((key.wrapping_mul(ROOK_MAGICS[square])) >> self.rook_shifts[square]) as usize;
+        self.rook_attacks[square][index]
+    }
+
+    pub fn get_bishop_moves(&self, square: usize, occupancy: u64) -> u64 {
+        let key = occupancy & self.bishop_masks[square];
+        let index = ((key.wrapping_mul(BISHOP_MAGICS[square])) >> self.bishop_shifts[square]) as usize;
+        self.bishop_attacks[square][index]
+    }
+
+    pub fn get_queen_moves(&self, square: usize, occupancy: u64) -> u64 {
+        self.get_rook_moves(square, occupancy) | self.get_bishop_moves(square, occupancy)
+    }
 }

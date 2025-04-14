@@ -100,9 +100,7 @@ impl Bitboard {
         self.empty |= square;
     }
 
-    pub fn get_piece_at(&mut self, pos: &Position) -> Option<Piece> {
-        let square = pos.to_bitboard();
-
+    pub fn get_piece_at(&self, square: u64) -> Option<Piece> {
         match square {
             _ if square & self.white_pawns != 0 => Some(Piece { color: PieceColor::White, piece_type: PieceType::Pawn }),
             _ if square & self.white_knights != 0 => Some(Piece { color: PieceColor::White, piece_type: PieceType::Knight }),
