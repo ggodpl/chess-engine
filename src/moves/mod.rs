@@ -32,5 +32,7 @@ pub struct Move {
     pub promotion: Option<PieceType>,
     pub captured: Option<Piece>,
     pub is_castling: bool,
-    pub is_en_passant: bool
+    pub is_en_passant: bool,
+    pub is_capture: bool,
+    pub is_promotion: bool
 }

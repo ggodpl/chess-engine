@@ -126,3 +126,17 @@ impl Bitboard {
         self.empty & square != 0
     }
 }
+
+pub const RANK_1: u64 = 0xFF00000000000000;
+pub const RANK_2: u64 = 0x00FF000000000000;
+pub const RANK_3: u64 = 0x0000FF0000000000;
+pub const RANK_6: u64 = 0x0000000000FF0000;
+pub const RANK_7: u64 = 0x000000000000FF00;
+pub const RANK_8: u64 = 0x00000000000000FF;
+
+pub const A_FILE: u64 = 0x0101010101010101;
+pub const H_FILE: u64 = 0x8080808080808080;
+pub const A_FILE_INV: u64 = 0xFEFEFEFEFEFEFEFE;
+pub const AB_FILE_INV: u64 = 0xFCFCFCFCFCFCFCFC;
+pub const GH_FILE_INV: u64 = 0x3F3F3F3F3F3F3F3F;
+pub const H_FILE_INV: u64 = 0x7F7F7F7F7F7F7F7F;

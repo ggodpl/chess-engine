@@ -9,6 +9,22 @@ pub struct Castling {
     black: (bool, bool)
 }
 
+impl Castling {
+    pub fn can_castle_ks(&self, color: PieceColor) -> bool {
+        match color {
+            PieceColor::White => self.white.0,
+            PieceColor::Black => self.black.0
+        }
+    }
+
+    pub fn can_castle_qs(&self, color: PieceColor) -> bool {
+        match color {
+            PieceColor::White => self.white.1,
+            PieceColor::Black => self.black.1
+        }
+    }
+}
+
 pub struct Board {
     pub bb: Bitboard,
     pub turn: PieceColor,
