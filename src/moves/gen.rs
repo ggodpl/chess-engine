@@ -168,7 +168,40 @@ impl Board {
 
         self.add_bitboard_moves(mask, enemy, square, moves);
 
-        // todo: castling
+        let color = piece.color.opposite();
+
+        if self.castling.can_castle_ks(piece.color)
+            && !self.is_attacked(square, color) && self.is_empty(square)
+            && !self.is_attacked(square << 1, color) && self.is_empty(square << 1)
+            && !self.is_attacked(square << 2, color) && self.is_empty(square << 2) {
+            moves.push(Move {
+                from: square,
+                to: square << 2,
+                promotion: None,
+                captured: None,
+                is_castling: true,
+                is_capture: false,
+                is_en_passant: false,
+                is_promotion: false
+            });
+        }
+
+        if self.castling.can_castle_qs(piece.color)
+            && !self.is_attacked(square, color) && self.is_empty(square)
+            && !self.is_attacked(square >> 1, color) && self.is_empty(square >> 1)
+            && !self.is_attacked(square >> 2, color) && self.is_empty(square >> 2)
+            && self.is_empty(square >> 3) {
+            moves.push(Move {
+                from: square,
+                to: square >> 2,
+                promotion: None,
+                captured: None,
+                is_castling: true,
+                is_capture: false,
+                is_en_passant: false,
+                is_promotion: false
+            });
+        }
     }
 
     pub fn add_bishop_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {

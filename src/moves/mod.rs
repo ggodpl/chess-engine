@@ -1,8 +1,9 @@
-use crate::piece::{Piece, PieceType};
+use crate::{board::Board, piece::{Piece, PieceColor, PieceType}};
 
 pub mod magic;
 pub mod values;
 pub mod gen;
+pub mod tables;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
@@ -23,6 +24,40 @@ impl Position {
         let index = square.trailing_zeros() as usize;
         Position { x: index % 8, y: index / 8 }
     }
+
+    pub fn to_vector(&self) -> Vector {
+        Vector {
+            x: self.x as i32,
+            y: self.y as i32
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Vector {
+    pub x: i32,
+    pub y: i32
+}
+
+impl Vector {
+    pub fn between(pos1: Position, pos2: Position) -> Self {
+        let vec1 = pos1.to_vector();
+        let vec2 = pos2.to_vector();
+        let x_diff = vec2.x - vec1.x;
+        let y_diff = vec2.y - vec1.y;
+
+        Vector {
+            x: x_diff.signum(),
+            y: y_diff.signum()
+        }
+    }
+
+    pub fn inv(&self) -> Self {
+        Vector {
+            x: -self.x,
+            y: -self.y
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -35,4 +70,35 @@ pub struct Move {
     pub is_en_passant: bool,
     pub is_capture: bool,
     pub is_promotion: bool
+}
+
+impl Board {
+    pub fn is_attacked(&self, square: u64, color: PieceColor) -> bool {
+        let index = square.trailing_zeros() as usize;
+
+        let pawns = if color == PieceColor::White { self.bb.white_pawns } else { self.bb.black_pawns };
+        let knights = if color == PieceColor::White { self.bb.white_knights } else { self.bb.black_knights };
+        let bishops = if color == PieceColor::White { self.bb.white_bishops } else { self.bb.black_bishops };
+        let rooks = if color == PieceColor::White { self.bb.white_rooks } else { self.bb.black_rooks };
+        let queens = if color == PieceColor::White { self.bb.white_queens } else { self.bb.black_queens };
+        let king = if color == PieceColor::White { self.bb.white_king } else { self.bb.black_king };
+
+        if self.attacks.pawn_attacks[color.opposite().index()][index] & pawns != 0 { return true; }
+        if self.attacks.knight_attacks[index] & knights != 0 { return true; }
+        if self.attacks.king_attacks[index] & king != 0 { return true; }
+
+        let bishop_attackers = bishops | queens;
+
+        if self.magic.get_bishop_moves(index, self.bb.pieces) & bishop_attackers != 0 { return true; }
+        
+        let rook_attackers = rooks | queens;
+        
+        if self.magic.get_rook_moves(index, self.bb.pieces) & rook_attackers != 0 { return true; }
+
+        false
+    }
+
+    pub fn is_empty(&self, square: u64) -> bool {
+        square & self.bb.empty == 0
+    }
 }

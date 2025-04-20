@@ -11,6 +11,13 @@ impl PieceColor {
             PieceColor::Black => PieceColor::White
         }
     }
+    
+    pub fn index(&self) -> usize {
+        match self {
+            PieceColor::White => 0,
+            PieceColor::Black => 1
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

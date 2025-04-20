@@ -2,7 +2,7 @@ use std::{fmt::Display, i64, sync::Arc};
 
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
-use crate::{bitboard::Bitboard, moves::{magic::Magic, Position}, piece::{Piece, PieceColor, PieceType}};
+use crate::{bitboard::Bitboard, moves::{magic::Magic, tables::AttackTables, Position}, piece::{Piece, PieceColor, PieceType}};
 
 pub struct Castling {
     white: (bool, bool),
@@ -35,10 +35,11 @@ pub struct Board {
     pub hash_table: [i64; 781],
     pub castling: Castling,
     pub magic: Arc<Magic>,
+    pub attacks: Arc<AttackTables>,
 }
 
 impl Board {
-    pub fn new(magic: Arc<Magic>) -> Self {
+    pub fn new(magic: Arc<Magic>, attacks: Arc<AttackTables>) -> Self {
         Board {
             bb: Bitboard::new(),
             turn: PieceColor::White,
@@ -52,11 +53,12 @@ impl Board {
                 black: (true, true)
             },
             magic,
+            attacks
         }
     }
 
-    pub fn from_fen(fen: &str, magic: Arc<Magic>) -> Self {
-        let mut board = Board::new(magic);
+    pub fn from_fen(fen: &str, magic: Arc<Magic>, attacks: Arc<AttackTables>) -> Self {
+        let mut board = Board::new(magic, attacks);
         let parts: Vec<&str> = fen.split_whitespace().collect();
         let position = parts[0];
         let turn = parts[1];
