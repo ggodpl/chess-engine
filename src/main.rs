@@ -9,4 +9,5 @@ fn main() {
     let board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", magic.clone(), attacks.clone());
 
     println!("{}", board);
+    println!("{:?}", board.get_legal_moves());
 }

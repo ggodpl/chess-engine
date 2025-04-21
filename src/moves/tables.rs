@@ -77,7 +77,7 @@ impl AttackTables {
 
                 if self.is_aligned(square1, square2) {
                     self.ray_masks[index1][index2] = self.cast_ray(square1, square2);
-                    self.line_masks[index1][index2] = self.get_line_mask(square1, square2);
+                    self.line_masks[index1][index2] = self.gen_line_mask(square1, square2);
                 }
             }
         }
@@ -117,7 +117,7 @@ impl AttackTables {
         mask
     }
 
-    fn get_line_mask(&self, square1: u64, square2: u64) -> u64 {
+    fn gen_line_mask(&self, square1: u64, square2: u64) -> u64 {
         let pos1 = Position::from_bitboard(square1);
         let pos2 = Position::from_bitboard(square2);
 
@@ -144,5 +144,20 @@ impl AttackTables {
         }
 
         mask
+    }
+
+    pub fn is_between(&self, square: u64, from: u64, to: u64) -> bool {
+        if square == 0 || from == 0 || to == 0 { return false; }
+        self.ray_masks[from.trailing_zeros() as usize][to.trailing_zeros() as usize] & square != 0
+    }
+
+    pub fn get_line_mask(&self, square1: u64, square2: u64) -> u64 {
+        if square1 == 0 || square2 == 0 { return 0; }
+        self.line_masks[square1.trailing_zeros() as usize][square2.trailing_zeros() as usize]
+    }
+
+    pub fn get_ray(&self, square1: u64, square2: u64) -> u64 {
+        if square1 == 0 || square2 == 0 { return 0; }
+        self.ray_masks[square1.trailing_zeros() as usize][square2.trailing_zeros() as usize]
     }
 }

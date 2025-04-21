@@ -4,6 +4,7 @@ pub mod magic;
 pub mod values;
 pub mod gen;
 pub mod tables;
+pub mod legal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
@@ -69,11 +70,14 @@ pub struct Move {
     pub is_castling: bool,
     pub is_en_passant: bool,
     pub is_capture: bool,
-    pub is_promotion: bool
+    pub is_promotion: bool,
+    pub is_king: bool,
 }
 
 impl Board {
-    pub fn is_attacked(&self, square: u64, color: PieceColor) -> bool {
+    pub fn get_attackers(&self, square: u64, color: PieceColor) -> u64 {
+        let mut mask = 0;
+
         let index = square.trailing_zeros() as usize;
 
         let pawns = if color == PieceColor::White { self.bb.white_pawns } else { self.bb.black_pawns };
@@ -83,22 +87,46 @@ impl Board {
         let queens = if color == PieceColor::White { self.bb.white_queens } else { self.bb.black_queens };
         let king = if color == PieceColor::White { self.bb.white_king } else { self.bb.black_king };
 
-        if self.attacks.pawn_attacks[color.opposite().index()][index] & pawns != 0 { return true; }
-        if self.attacks.knight_attacks[index] & knights != 0 { return true; }
-        if self.attacks.king_attacks[index] & king != 0 { return true; }
+        mask |= self.attacks.pawn_attacks[color.opposite().index()][index] & pawns;
+        mask |= self.attacks.knight_attacks[index] & knights;
+        mask |= self.attacks.king_attacks[index] & king;
 
         let bishop_attackers = bishops | queens;
 
-        if self.magic.get_bishop_moves(index, self.bb.pieces) & bishop_attackers != 0 { return true; }
+        mask |= self.magic.get_bishop_moves(index, self.bb.pieces) & bishop_attackers;
         
         let rook_attackers = rooks | queens;
         
-        if self.magic.get_rook_moves(index, self.bb.pieces) & rook_attackers != 0 { return true; }
+        mask |= self.magic.get_rook_moves(index, self.bb.pieces) & rook_attackers;
 
-        false
+        mask
+    }
+
+    pub fn is_attacked(&self, square: u64, color: PieceColor) -> bool {
+        self.get_attackers(square, color) != 0
     }
 
     pub fn is_empty(&self, square: u64) -> bool {
-        square & self.bb.empty == 0
+        square & self.bb.empty != 0
+    }
+
+    pub fn is_checked(&self, color: PieceColor) -> bool {
+        let king = if color == PieceColor::White {
+            self.bb.white_king
+        } else {
+            self.bb.black_king
+        };
+
+        self.is_attacked(king, color.opposite())
+    }
+
+    pub fn is_double_checked(&self, color: PieceColor) -> bool {
+        let king = if color == PieceColor::White {
+            self.bb.white_king
+        } else {
+            self.bb.black_king
+        };
+
+        self.get_attackers(king, color).count_ones() >= 2
     }
 }
