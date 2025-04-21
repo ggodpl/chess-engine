@@ -1,12 +1,13 @@
-use std::{fmt::Display, i64, sync::Arc};
+use std::{i64, sync::Arc};
 
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::{bitboard::Bitboard, moves::{magic::Magic, tables::AttackTables, Position}, piece::{Piece, PieceColor, PieceType}};
 
+#[derive(Debug, Clone, Copy)]
 pub struct Castling {
-    white: (bool, bool),
-    black: (bool, bool)
+    pub white: (bool, bool),
+    pub black: (bool, bool)
 }
 
 impl Castling {
@@ -24,6 +25,7 @@ impl Castling {
         }
     }
 }
+
 
 pub struct Board {
     pub bb: Bitboard,
@@ -96,7 +98,7 @@ impl Board {
                         piece_type
                     };
 
-                    board.bb.add_piece(piece, Position { x: i, y: j });
+                    board.bb.add_piece(piece, Position::bitboard(i, j));
                 }
                 i += 1;
             }
@@ -121,6 +123,10 @@ impl Board {
         }
 
         board
+    }
+
+    pub fn startpos(magic: Arc<Magic>, attacks: Arc<AttackTables>) -> Self {
+        Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", magic, attacks)
     }
 
     pub fn gen_hash(&mut self) {
@@ -158,41 +164,5 @@ impl Board {
 
         self.hash = hash;
         self.hash_table = hash_array;
-    }
-}
-
-impl Display for Board {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "  ")?;
-        for i in 0..8 {
-            write!(f, "{} ", "abcdefgh".chars().nth(i).unwrap())?;
-        }
-        write!(f, "\n")?;
-        for rank in 0..8 {
-            write!(f, "{} ", 8 - rank)?;
-            for file in 0..8 {
-                let piece = self.bb.get_piece_at(Position::bitboard(file, rank));
-                if let Some(piece) = piece {
-                    let piece_char = match piece.piece_type {
-                        PieceType::Pawn => "p",
-                        PieceType::Knight => "n",
-                        PieceType::Bishop => "b",
-                        PieceType::Rook => "r",
-                        PieceType::Queen => "q",
-                        PieceType::King => "k"
-                    };
-                    
-                    write!(f, "{} ", if piece.color == PieceColor::White {
-                        piece_char.to_uppercase()
-                    } else {
-                        piece_char.to_owned()
-                    })?;
-                } else {
-                    write!(f, ". ")?;
-                }
-            }
-            write!(f, "\n")?;
-        }
-        Ok(())
     }
 }

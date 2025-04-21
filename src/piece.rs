@@ -20,7 +20,7 @@ impl PieceColor {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PieceType {
     Pawn,
     Knight,

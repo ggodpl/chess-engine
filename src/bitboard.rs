@@ -1,5 +1,6 @@
 use crate::{moves::Position, piece::{Piece, PieceColor, PieceType}};
 
+#[derive(Debug, Clone, Copy)]
 pub struct Bitboard {
     pub pieces: u64,
     pub empty: u64,
@@ -43,9 +44,7 @@ impl Bitboard {
         }
     }
 
-    pub fn add_piece(&mut self, piece: Piece, pos: Position) {
-        let square = pos.to_bitboard();
-
+    pub fn add_piece(&mut self, piece: Piece, square: u64) {
         match (&piece.piece_type, &piece.color) {
             (PieceType::Pawn, PieceColor::White) => self.white_pawns |= square,
             (PieceType::Knight, PieceColor::White) => self.white_knights |= square,
@@ -71,8 +70,7 @@ impl Bitboard {
         self.empty &= !square;
     }
 
-    pub fn remove_piece(&mut self, piece: Piece, pos: Position) {
-        let square = pos.to_bitboard();
+    pub fn remove_piece(&mut self, piece: Piece, square: u64) {
         let inv_square = !square;
 
         match (&piece.piece_type, &piece.color) {
@@ -98,6 +96,14 @@ impl Bitboard {
 
         self.pieces &= inv_square;
         self.empty |= square;
+    }
+
+    pub fn remove_piece_at(&mut self, square: u64) {
+        let piece = self.get_piece_at(square);
+
+        if let Some(piece) = piece {
+            self.remove_piece(piece, square);
+        }
     }
 
     pub fn get_piece_at(&self, square: u64) -> Option<Piece> {
@@ -127,11 +133,22 @@ impl Bitboard {
 
         self.empty & square != 0
     }
+
+    pub fn move_piece(&mut self, square: u64, to: u64) {
+        let piece = self.get_piece_at(square);
+
+        if let Some(piece) = piece {
+            self.remove_piece(piece, square);
+            self.add_piece(piece, to);
+        }
+    }
 }
 
 pub const RANK_1: u64 = 0xFF00000000000000;
 pub const RANK_2: u64 = 0x00FF000000000000;
 pub const RANK_3: u64 = 0x0000FF0000000000;
+pub const RANK_4: u64 = 0x000000FF00000000;
+pub const RANK_5: u64 = 0x00000000FF000000;
 pub const RANK_6: u64 = 0x0000000000FF0000;
 pub const RANK_7: u64 = 0x000000000000FF00;
 pub const RANK_8: u64 = 0x00000000000000FF;
@@ -142,3 +159,8 @@ pub const A_FILE_INV: u64 = 0xFEFEFEFEFEFEFEFE;
 pub const AB_FILE_INV: u64 = 0xFCFCFCFCFCFCFCFC;
 pub const GH_FILE_INV: u64 = 0x3F3F3F3F3F3F3F3F;
 pub const H_FILE_INV: u64 = 0x7F7F7F7F7F7F7F7F;
+
+pub const A1: u64 = 0x1;
+pub const H1: u64 = 0x80;
+pub const A8: u64 = 0x100000000000000;
+pub const H8: u64 = 0x8000000000000000;

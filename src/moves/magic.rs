@@ -1,3 +1,5 @@
+use std::vec;
+
 use super::{values::{BISHOP_MAGICS, ROOK_MAGICS}, Position};
 
 pub struct Magic {
@@ -41,7 +43,7 @@ impl Magic {
             }
 
             for r in 1..rank {
-                mask |= Position::bitboard(file, rank - r);
+                mask |= Position::bitboard(file, r);
             }
 
             for f in (file + 1)..7 {
@@ -49,7 +51,7 @@ impl Magic {
             }
 
             for f in 1..file {
-                mask |= Position::bitboard(file - f, rank);
+                mask |= Position::bitboard(f, rank);
             }
 
             self.rook_masks[square] = mask;
@@ -142,6 +144,7 @@ impl Magic {
             let bits = 64 - shift;
             let size = 1 << bits;
             let mut table = vec![0; size];
+            let mut used = vec![false; size];
 
             let mask = self.rook_masks[square];
             let occupancy = Magic::get_occupancy(mask);
@@ -149,6 +152,12 @@ impl Magic {
             for block in occupancy {
                 let index = ((block.wrapping_mul(magic)) >> shift) as usize;
                 let moves = self.get_rook_attacks(square, block);
+                
+                if used[index] && table[index] != moves {
+                    panic!("Magic collision at square {}!", square);
+                }
+
+                used[index] = true;
                 table[index] = moves;
             }
 
@@ -189,8 +198,8 @@ impl Magic {
             if occupancy & target != 0 { break; }
         }
 
-        for r in 0..rank {
-            let target = Position::bitboard(file, rank - r);
+        for r in (0..rank).rev() {
+            let target = Position::bitboard(file, r);
             attacks |= target;
             if occupancy & target != 0 { break; }
         }
@@ -201,8 +210,8 @@ impl Magic {
             if occupancy & target != 0 { break; }
         }
 
-        for f in 0..file {
-            let target = Position::bitboard(file - f, rank);
+        for f in (0..file).rev() {
+            let target = Position::bitboard(f, rank);
             attacks |= target;
             if occupancy & target != 0 { break; }
         }

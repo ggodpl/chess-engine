@@ -1,17 +1,17 @@
-use crate::{board::Board, piece::PieceColor};
+use crate::{board::Board, piece::{PieceColor, PieceType}};
 
 use super::Move;
 
 impl Board {
     pub fn filter_legal_moves(&self, moves: &mut Vec<Move>) {
         if self.is_double_checked(self.turn) {
-            moves.retain(|m| m.is_king && !self.is_attacked(m.to, self.turn.opposite()));
+            moves.retain(|m| m.piece_type == PieceType::King && !self.is_attacked(m.to, self.turn.opposite()));
             return;
         }
 
         if self.is_checked(self.turn) {
             moves.retain(|m| {
-                if m.is_king {
+                if m.piece_type == PieceType::King {
                     !self.is_attacked(m.to, self.turn.opposite())
                 } else {
                     let king = if self.turn == PieceColor::White {
@@ -38,8 +38,6 @@ impl Board {
                 // handle phantom pins
                 let line = self.attacks.get_line_mask(m.from, king);
                 let ray = self.attacks.get_ray(m.from, king);
-
-                let complement = line & !ray & !m.from & !king;
                 
                 let captured = if self.turn == PieceColor::White {
                     m.to << 8
@@ -48,16 +46,28 @@ impl Board {
                 };
 
                 let occupancy = self.bb.pieces & !captured;
-                
-                let attackers = self.magic.get_queen_moves(m.from.trailing_zeros() as usize, occupancy);
-                
-                let enemy = if self.turn == PieceColor::White {
-                    self.bb.black_pieces
-                } else {
-                    self.bb.white_pieces
-                };
 
-                return complement & attackers & enemy == 0
+                let complement = line & !ray & !m.from & !king;
+                        
+                let bishop_attackers = self.magic.get_bishop_moves(m.from.trailing_zeros() as usize, occupancy);
+                
+                let rook_attackers = self.magic.get_rook_moves(m.from.trailing_zeros() as usize, occupancy);
+        
+                let enemy_bishops = if self.turn == PieceColor::White {
+                    self.bb.black_bishops | self.bb.black_queens
+                } else {
+                    self.bb.white_bishops | self.bb.white_queens
+                };
+        
+                let enemy_rooks = if self.turn == PieceColor::White {
+                    self.bb.black_rooks | self.bb.black_queens
+                } else {
+                    self.bb.white_rooks | self.bb.white_queens
+                };
+        
+                let attackers = (bishop_attackers & enemy_bishops) | (rook_attackers & enemy_rooks);
+        
+                return complement & attackers == 0;
             }
 
             let pin = self.get_pin(m.from);
@@ -92,29 +102,26 @@ impl Board {
         if line == 0 { return 0; }
 
         let complement = line & !ray & !square & !king;
-    
-        let enemy = if piece.color == PieceColor::White {
-            self.bb.black_pieces
+                
+        let bishop_attackers = self.magic.get_bishop_moves(square.trailing_zeros() as usize, self.bb.pieces);
+        
+        let rook_attackers = self.magic.get_rook_moves(square.trailing_zeros() as usize, self.bb.pieces);
+
+        let enemy_bishops = if self.turn == PieceColor::White {
+            self.bb.black_bishops | self.bb.black_queens
         } else {
-            self.bb.white_pieces
+            self.bb.white_bishops | self.bb.white_queens
         };
 
-        let pinners = complement & enemy;
+        let enemy_rooks = if self.turn == PieceColor::White {
+            self.bb.black_rooks | self.bb.black_queens
+        } else {
+            self.bb.white_rooks | self.bb.white_queens
+        };
 
-        let mut result = 0;
-        let mut rem = pinners;
-        while rem != 0 {
-            let index = rem.trailing_zeros() as usize;
-            let pin = 1u64 << index;
+        let attackers = (bishop_attackers & enemy_bishops) | (rook_attackers & enemy_rooks);
 
-            if self.attacks.get_ray(pin, square) & self.bb.pieces == 0 {
-                result |= pin;
-            }
-
-            rem &= rem - 1;
-        }
-
-        result
+        complement & attackers
     }
 
     pub fn is_pinned(&self, square: u64) -> bool {

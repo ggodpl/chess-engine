@@ -5,9 +5,7 @@ use super::Move;
 impl Board {
     pub fn get_legal_moves(&self) -> Vec<Move> {
         let mut moves = self.get_pseudo_legal_moves();
-        println!("{}", moves.len());
         self.filter_legal_moves(&mut moves);
-        println!("{}", moves.len());
         
         moves
     }
@@ -109,7 +107,8 @@ impl Board {
                         is_castling: false,
                         promotion: Some(piece_type),
                         is_promotion,
-                        is_king: false,
+                        piece_type: piece.piece_type,
+                        color: piece.color,
                     });
                 }
             } else {
@@ -130,7 +129,8 @@ impl Board {
                     is_castling: false,
                     promotion: None,
                     is_promotion,
-                    is_king: false,
+                    piece_type: piece.piece_type,
+                    color: piece.color,
                 });
             }
 
@@ -156,7 +156,7 @@ impl Board {
 
         let mask = knight_moves & (self.bb.empty | enemy);
 
-        self.add_bitboard_moves(mask, enemy, square, moves, false);
+        self.add_bitboard_moves(mask, enemy, square, moves, piece);
     }
 
     pub fn add_king_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
@@ -177,32 +177,14 @@ impl Board {
 
         let mask = king_moves & (self.bb.empty | enemy);
 
-        self.add_bitboard_moves(mask, enemy, square, moves, true);
+        self.add_bitboard_moves(mask, enemy, square, moves, piece);
 
         let color = piece.color.opposite();
 
         if self.castling.can_castle_ks(piece.color)
             && !self.is_attacked(square, color)
-            && !self.is_attacked(square >> 1, color) && self.is_empty(square >> 1)
-            && !self.is_attacked(square >> 2, color) && self.is_empty(square >> 2) {
-            moves.push(Move {
-                from: square,
-                to: square >> 2,
-                promotion: None,
-                captured: None,
-                is_castling: true,
-                is_capture: false,
-                is_en_passant: false,
-                is_promotion: false,
-                is_king: true,
-            });
-        }
-
-        if self.castling.can_castle_qs(piece.color)
-            && !self.is_attacked(square, color)
             && !self.is_attacked(square << 1, color) && self.is_empty(square << 1)
-            && !self.is_attacked(square << 2, color) && self.is_empty(square << 2)
-            && self.is_empty(square << 3) {
+            && !self.is_attacked(square << 2, color) && self.is_empty(square << 2) {
             moves.push(Move {
                 from: square,
                 to: square << 2,
@@ -212,7 +194,27 @@ impl Board {
                 is_capture: false,
                 is_en_passant: false,
                 is_promotion: false,
-                is_king: true,
+                piece_type: piece.piece_type,
+                color: piece.color,
+            });
+        }
+
+        if self.castling.can_castle_qs(piece.color)
+            && !self.is_attacked(square, color)
+            && !self.is_attacked(square >> 1, color) && self.is_empty(square >> 1)
+            && !self.is_attacked(square >> 2, color) && self.is_empty(square >> 2)
+            && self.is_empty(square >> 3) {
+            moves.push(Move {
+                from: square,
+                to: square >> 2,
+                promotion: None,
+                captured: None,
+                is_castling: true,
+                is_capture: false,
+                is_en_passant: false,
+                is_promotion: false,
+                piece_type: piece.piece_type,
+                color: piece.color,
             });
         }
     }
@@ -266,10 +268,10 @@ impl Board {
             self.bb.white_pieces
         };
 
-        self.add_bitboard_moves(mask, enemy, square, moves, false);
+        self.add_bitboard_moves(mask, enemy, square, moves, piece);
     }
 
-    pub fn add_bitboard_moves(&self, mask: u64, enemy: u64, square: u64, moves: &mut Vec<Move>, is_king: bool) {
+    pub fn add_bitboard_moves(&self, mask: u64, enemy: u64, square: u64, moves: &mut Vec<Move>, piece: Piece) {
         let mut rem = mask;
         while rem != 0 {
             let index = rem.trailing_zeros() as usize;
@@ -286,7 +288,8 @@ impl Board {
                 is_en_passant: false,
                 is_promotion: false,
                 promotion: None,
-                is_king,
+                piece_type: piece.piece_type,
+                color: piece.color,
             });
 
             rem &= rem - 1;

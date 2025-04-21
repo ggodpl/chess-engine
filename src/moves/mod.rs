@@ -5,6 +5,7 @@ pub mod values;
 pub mod gen;
 pub mod tables;
 pub mod legal;
+pub mod make;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
@@ -71,11 +72,13 @@ pub struct Move {
     pub is_en_passant: bool,
     pub is_capture: bool,
     pub is_promotion: bool,
-    pub is_king: bool,
+    pub piece_type: PieceType,
+    pub color: PieceColor,
 }
 
 impl Board {
     pub fn get_attackers(&self, square: u64, color: PieceColor) -> u64 {
+        if square == 0 { return 0; }
         let mut mask = 0;
 
         let index = square.trailing_zeros() as usize;
