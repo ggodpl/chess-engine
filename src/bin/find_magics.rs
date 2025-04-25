@@ -14,15 +14,15 @@ fn find_magics(masks: [u64; 64], shifts: [u64; 64], attacks: [Vec<u64>; 64]) {
 
         'ext: for _ in 0..MAX_TRIES {
             let candidate = random_magic();
-            let mut used = vec![0u64; size];
+            let mut used = vec![false; size];
             let mut attack_table = vec![0u64; size];
 
             for i in 0..size {
                 let index = ((occupancy[i].wrapping_mul(candidate)) >> shift) as usize;
-                if used[index] == 0 {
-                    used[index] = 1;
+                if !used[index] {
+                    used[index] = true;
                     attack_table[index] = attacks[i];
-                } else if attack_table[index] != attacks[i] {
+                } else {
                     continue 'ext; // collision
                 }
             }

@@ -90,17 +90,19 @@ impl Board {
         let queens = if color == PieceColor::White { self.bb.white_queens } else { self.bb.black_queens };
         let king = if color == PieceColor::White { self.bb.white_king } else { self.bb.black_king };
 
+        let opposite_king = if color == PieceColor::White { self.bb.black_king } else { self.bb.white_king };
+
         mask |= self.attacks.pawn_attacks[color.opposite().index()][index] & pawns;
         mask |= self.attacks.knight_attacks[index] & knights;
         mask |= self.attacks.king_attacks[index] & king;
 
         let bishop_attackers = bishops | queens;
 
-        mask |= self.magic.get_bishop_moves(index, self.bb.pieces) & bishop_attackers;
+        mask |= self.magic.get_bishop_moves(index, self.bb.pieces & !opposite_king) & bishop_attackers;
         
         let rook_attackers = rooks | queens;
         
-        mask |= self.magic.get_rook_moves(index, self.bb.pieces) & rook_attackers;
+        mask |= self.magic.get_rook_moves(index, self.bb.pieces & !opposite_king) & rook_attackers;
 
         mask
     }
@@ -130,6 +132,6 @@ impl Board {
             self.bb.black_king
         };
 
-        self.get_attackers(king, color).count_ones() >= 2
+        self.get_attackers(king, color.opposite()).count_ones() >= 2
     }
 }

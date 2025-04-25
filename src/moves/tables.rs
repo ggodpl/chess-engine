@@ -148,6 +148,7 @@ impl AttackTables {
 
     pub fn is_between(&self, square: u64, from: u64, to: u64) -> bool {
         if square == 0 || from == 0 || to == 0 { return false; }
+        if square == from { return true; }
         self.ray_masks[from.trailing_zeros() as usize][to.trailing_zeros() as usize] & square != 0
     }
 

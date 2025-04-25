@@ -4,8 +4,10 @@ use super::Move;
 
 impl Board {
     pub fn filter_legal_moves(&self, moves: &mut Vec<Move>) {
+        moves.retain(|m| if m.piece_type == PieceType::King { !self.is_attacked(m.to, self.turn.opposite()) } else { true });
+        
         if self.is_double_checked(self.turn) {
-            moves.retain(|m| m.piece_type == PieceType::King && !self.is_attacked(m.to, self.turn.opposite()));
+            moves.retain(|m| m.piece_type == PieceType::King);
             return;
         }
 
@@ -100,6 +102,8 @@ impl Board {
         let ray = self.attacks.get_ray(square, king);
 
         if line == 0 { return 0; }
+        // a piece is blocking the pin
+        if ray & !square & !king & self.bb.pieces != 0 { return 0; }
 
         let complement = line & !ray & !square & !king;
                 

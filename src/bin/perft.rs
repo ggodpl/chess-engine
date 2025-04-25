@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Instant};
 
-use mchess::{board::Board, display::show_mask, moves::{magic::Magic, tables::AttackTables}};
+use mchess::{board::Board, moves::{magic::Magic, tables::AttackTables}};
 
 fn perft(board: &mut Board, depth: u32) -> usize {
     if depth == 0 { return 1; }
@@ -34,12 +34,7 @@ fn split_perft(board: &mut Board, depth: u32) -> usize {
         let move_str = format!("{}", m);
 
         let state = board.make_move(&m);
-        let nodes = if move_str == "g1h3" {
-            show_mask(board.bb.pieces);
-            split_perft(board, depth - 1)
-        } else {
-            perft(board, depth - 1)
-        };
+        let nodes = perft(board, depth - 1);
         
         println!("{}: {}", move_str, nodes);
         
