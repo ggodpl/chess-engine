@@ -1,4 +1,4 @@
-use crate::{bitboard::{Bitboard, A1, A8, H1, H8, RANK_1, RANK_2, RANK_4, RANK_5, RANK_7, RANK_8}, board::{Board, Castling}, piece::{Piece, PieceColor, PieceType}};
+use crate::{bitboard::{Bitboard, A1, A8, H1, H8, RANK_2, RANK_4, RANK_5, RANK_7}, board::{Board, Castling}, piece::{Piece, PieceColor, PieceType}};
 
 use super::Move;
 
@@ -26,6 +26,17 @@ impl Board {
         let bb = self.bb.clone();
 
         // capture
+        if let Some(captured) = self.bb.get_piece_at(m.to) {
+            if captured.piece_type == PieceType::Rook {
+                match m.to {
+                    A1 => self.castling.white.1 = false,
+                    H1 => self.castling.white.0 = false,
+                    A8 => self.castling.black.1 = false,
+                    H8 => self.castling.black.0 = false,
+                    _ => {}
+                }
+            }
+        }
         self.bb.remove_piece_at(m.to);
 
         self.bb.move_piece(m.from, m.to);
@@ -69,13 +80,13 @@ impl Board {
         }
 
         if m.piece_type == PieceType::Rook {
-            if m.color == PieceColor::White && m.from & RANK_1 != 0 {
+            if m.color == PieceColor::White {
                 match m.from {
                     A1 => self.castling.white.1 = false,
                     H1 => self.castling.white.0 = false,
                     _ => {}
                 }
-            } else if m.color == PieceColor::Black && m.from & RANK_8 != 0 {
+            } else if m.color == PieceColor::Black {
                 match m.from {
                     A8 => self.castling.black.1 = false,
                     H8 => self.castling.black.0 = false,

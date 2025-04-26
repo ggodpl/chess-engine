@@ -91,9 +91,9 @@ impl Board {
             let is_en_passant = to & self.target_square != 0;
 
             let is_promotion = if piece.color == PieceColor::White {
-                to & RANK_1 != 0
-            } else {
                 to & RANK_8 != 0
+            } else {
+                to & RANK_1 != 0
             };
 
             if is_promotion {

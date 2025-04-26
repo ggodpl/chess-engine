@@ -160,7 +160,7 @@ pub const AB_FILE_INV: u64 = 0xFCFCFCFCFCFCFCFC;
 pub const GH_FILE_INV: u64 = 0x3F3F3F3F3F3F3F3F;
 pub const H_FILE_INV: u64 = 0x7F7F7F7F7F7F7F7F;
 
-pub const A1: u64 = 0x1;
-pub const H1: u64 = 0x80;
-pub const A8: u64 = 0x100000000000000;
-pub const H8: u64 = 0x8000000000000000;
+pub const A8: u64 = 0x1;
+pub const H8: u64 = 0x80;
+pub const A1: u64 = 0x100000000000000;
+pub const H1: u64 = 0x8000000000000000;

@@ -40,12 +40,17 @@ impl Board {
                 // handle phantom pins
                 let line = self.attacks.get_line_mask(m.from, king);
                 let ray = self.attacks.get_ray(m.from, king);
+
+                if line == 0 { return true; }
                 
                 let captured = if self.turn == PieceColor::White {
                     m.to << 8
                 } else {
                     m.to >> 8
                 };
+
+                // a piece is blocking the pin
+                if ray & !m.from & !king & !captured & self.bb.pieces != 0 { return true; }
 
                 let occupancy = self.bb.pieces & !captured;
 
