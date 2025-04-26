@@ -22,6 +22,18 @@ impl Board {
                         self.bb.black_king
                     };
 
+                    if m.is_en_passant {
+                        let captured = if self.turn == PieceColor::White {
+                            m.to << 8
+                        } else {
+                            m.to >> 8
+                        };
+
+                        let attacker = self.get_attackers(king, self.turn.opposite());
+
+                        if attacker & captured != 0 { return !self.is_pinned(m.from); }
+                    }
+
                     // when a piece is pinned, its not able to block a check, no matter how the position looks
                     !self.is_pinned(m.from) && self.attacks.is_between(m.to, self.get_attackers(king, self.turn.opposite()), king)
                 }
@@ -57,7 +69,6 @@ impl Board {
                 let complement = line & !ray & !m.from & !king;
                         
                 let bishop_attackers = self.magic.get_bishop_moves(m.from.trailing_zeros() as usize, occupancy);
-                
                 let rook_attackers = self.magic.get_rook_moves(m.from.trailing_zeros() as usize, occupancy);
         
                 let enemy_bishops = if self.turn == PieceColor::White {
