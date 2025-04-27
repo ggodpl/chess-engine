@@ -159,9 +159,25 @@ impl Bitboard {
         }
     }
 
-    pub fn count_material(&self) -> u32 {
+    pub fn count_non_bk(&self) -> u32 {
         let material = self.white_pawns | self.white_rooks | self.white_queens | self.black_pawns | self.black_rooks | self.black_queens;
         material.count_ones()
+    }
+
+    pub fn count_material(&self, color: PieceColor) -> u32 {
+        if color == PieceColor::White {
+            self.white_pawns.count_ones() as u32 * PieceType::Pawn.value() +
+            self.white_bishops.count_ones() as u32 * PieceType::Bishop.value() +
+            self.white_knights.count_ones() as u32 * PieceType::Knight.value() +
+            self.white_rooks.count_ones() as u32 * PieceType::Rook.value() +
+            self.white_queens.count_ones() as u32 * PieceType::Queen.value()
+        } else {
+            self.black_pawns.count_ones() as u32 * PieceType::Pawn.value() +
+            self.black_bishops.count_ones() as u32 * PieceType::Bishop.value() +
+            self.black_knights.count_ones() as u32 * PieceType::Knight.value() +
+            self.black_rooks.count_ones() as u32 * PieceType::Rook.value() +
+            self.black_queens.count_ones() as u32 * PieceType::Queen.value()
+        }
     }
 }
 

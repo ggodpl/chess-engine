@@ -14,14 +14,14 @@ pub struct Meta {
 pub type State = (Meta, Bitboard, Move);
 
 impl Board {
-    pub fn update_hash(&mut self, m: &Move, old_target: u64) {
+    pub fn update_hash(&mut self, m: &Move, state: &State) {
         let hash_index = Piece::index_from(m.piece_type, m.color);
         let from = Position::from_bitboard(m.from);
         let to = Position::from_bitboard(m.to);
         self.hash ^= self.hash_table[hash_index * 64 + from.y * 8 + from.x];
         self.hash ^= self.hash_table[hash_index * 64 + to.y * 8 + to.x];
 
-        if let Some(captured) = self.bb.get_piece_at(m.to) {
+        if let Some(captured) = state.1.get_piece_at(m.to) {
             let pos = Position::from_bitboard(m.to);
             self.hash ^= self.hash_table[captured.index() * 64 + pos.y * 8 + pos.x];
         }
@@ -34,7 +34,7 @@ impl Board {
             };
             let pos = Position::from_bitboard(square);
             
-            self.hash ^= self.hash_table[self.bb.get_piece_at(square).unwrap().index() * 64 + pos.y * 8 + pos.x];
+            self.hash ^= self.hash_table[state.1.get_piece_at(square).unwrap().index() * 64 + pos.y * 8 + pos.x];
         }
 
         if m.is_castling {
@@ -53,7 +53,7 @@ impl Board {
                 m.to << 1
             });
 
-            let rook_index = self.bb.get_piece_at(rook_square).unwrap().index();
+            let rook_index = state.1.get_piece_at(rook_square).unwrap().index();
 
             self.hash ^= self.hash_table[rook_index * 64 + rook_from.y * 8 + rook_from.x];
             self.hash ^= self.hash_table[rook_index * 64 + rook_to.y * 8 + rook_to.x];
@@ -93,12 +93,14 @@ impl Board {
             }
         }
 
-        if old_target != 0 {
-            self.hash ^= self.hash_table[12 * 64 + 5 + (old_target.trailing_zeros() as usize)];
+        if state.0.target_square != 0 {
+            let pos = Position::from_bitboard(state.0.target_square);
+            self.hash ^= self.hash_table[12 * 64 + 5 + pos.x];
         }
 
         if self.target_square != 0 {
-            self.hash ^= self.hash_table[12 * 64 + 5 + (self.target_square.trailing_zeros() as usize)];
+            let pos = Position::from_bitboard(self.target_square);
+            self.hash ^= self.hash_table[12 * 64 + 5 + pos.x];
         }
 
         if m.is_promotion {
@@ -219,9 +221,11 @@ impl Board {
             self.moves += 1;
         }
 
-        self.update_hash(m, meta.target_square);
+        let state = (meta, bb, m.clone());
 
-        (meta, bb, m.clone())
+        self.update_hash(m, &state);
+
+        state
     }
 
     pub fn unmake_move(&mut self, state: &State) {
@@ -235,6 +239,6 @@ impl Board {
 
         self.bb = bb.clone();
 
-        self.update_hash(m, meta.target_square);
+        self.update_hash(m, state);
     }
 }

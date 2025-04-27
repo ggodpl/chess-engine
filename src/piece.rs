@@ -41,6 +41,17 @@ impl PieceType {
             PieceType::King => 5
         }
     }
+
+    pub fn value(&self) -> u32 {
+        match self {
+            PieceType::Pawn => 1,
+            PieceType::Bishop => 3,
+            PieceType::Knight => 3,
+            PieceType::Rook => 5,
+            PieceType::Queen => 9,
+            PieceType::King => 100
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
