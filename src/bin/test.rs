@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Instant};
 
 use mchess::{board::Board, moves::{magic::Magic, tables::AttackTables}, search::Search};
 
@@ -9,5 +9,9 @@ fn main() {
     let mut board = Board::startpos(magic, attacks);
     let mut search = Search::new();
 
-    println!("{}", search.search(&mut board, 6))
+    let start = Instant::now();
+
+    println!("{}", search.search(&mut board, 7));
+
+    println!("{:?}", start.elapsed());
 }

@@ -15,14 +15,16 @@ pub struct SearchResult {
 
 pub struct Search {
     pub is_stopping: bool,
-    pub nodes: usize
+    pub nodes: usize,
+    scored_moves: Vec<(Move, f64)>,
 }
 
 impl Search {
     pub fn new() -> Self {
         Search { 
             is_stopping: false,
-            nodes: 0
+            nodes: 0,
+            scored_moves: Vec::with_capacity(0)
         }
     }
 

@@ -3,24 +3,18 @@ use crate::{board::Board, evaluation::evaluate_position, moves::{helper::{get_ca
 use super::{values::*, Search};
 
 impl Search {
-    pub(crate) fn sort_moves(&mut self, moves: &Vec<Move>, board: &mut Board) -> Vec<Move> {
-        let scores = moves.iter()
-            .map(|m| self.evaluate_move(*m, board));
+    pub(crate) fn sort_moves(&mut self, moves: &Vec<Move>, board: &mut Board) -> Vec<(Move, f64)> {
+        self.scored_moves.clear();
+        self.scored_moves.reserve(moves.len());
 
-        let mut indices: Vec<(usize, f64)> = scores
-            .enumerate()
-            .map(|(i, score)| (i, score))
-            .collect();
-
-        indices.sort_by(|(_, a), (_, b)| b.total_cmp(a));
-
-        let mut result: Vec<Move> = Vec::with_capacity(moves.len());
-
-        for (i, _) in indices {
-            result.push(moves[i].clone());
+        for &m in moves {
+            let score = self.evaluate_move(m, board);
+            self.scored_moves.push((m, score));
         }
 
-        result
+        self.scored_moves.sort_unstable_by(|(_, a), (_, b)| b.total_cmp(a));
+
+        self.scored_moves.clone()
     }
 
     pub(crate) fn evaluate_move(&mut self, m: Move, board: &mut Board) -> f64 {

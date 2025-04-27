@@ -49,9 +49,7 @@ pub fn evaluate(board: &Board) -> EvaluationResult {
         black: board.bb.count_material(PieceColor::Black) as f64
     };
 
-    let mobility = evaluate_mobility(board);
-
-    material.combine(mobility)
+    material
 }
 
 pub fn evaluate_mobility(board: &Board) -> EvaluationResult {
@@ -66,14 +64,14 @@ pub fn evaluate_mobility(board: &Board) -> EvaluationResult {
 
 pub fn evaluate_position(board: &Board, piece_type: PieceType, x: usize, y: usize) -> f64 {
     match piece_type {
-        PieceType::Pawn => PAWN_TABLE[y][x],
-        PieceType::Knight => KNIGHT_TABLE[y][x],
-        PieceType::Bishop => BISHOP_TABLE[y][x],
-        PieceType::Rook => ROOK_TABLE[y][x],
-        PieceType::Queen => QUEEN_TABLE[y][x],
+        PieceType::Pawn => PAWN_TABLE[y * 8 + x],
+        PieceType::Knight => KNIGHT_TABLE[y * 8 + x],
+        PieceType::Bishop => BISHOP_TABLE[y * 8 + x],
+        PieceType::Rook => ROOK_TABLE[y * 8 + x],
+        PieceType::Queen => QUEEN_TABLE[y * 8 + x],
         PieceType::King => {
             let phase = board.calculate_phase();
-            (KING_MIDDLEGAME_TABLE[y][x] * (1.0 - phase)) + (KING_ENDGAME_TABLE[y][x] * phase)
+            (KING_MIDDLEGAME_TABLE[y * 8 + x] * (1.0 - phase)) + (KING_ENDGAME_TABLE[y * 8 + x] * phase)
         }
     }
 }

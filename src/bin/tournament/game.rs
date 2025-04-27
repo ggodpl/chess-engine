@@ -82,7 +82,13 @@ impl Game {
         for _ in 0..400 {
             let white_move = white.get_best_move(STARTPOS, &moves, self.time_limit)?;
 
-            for m in board.get_legal_moves() {
+            let legal_moves = board.get_legal_moves();
+
+            if moves.is_empty() && !board.is_checked(board.turn) {
+                return Ok(GameResult::Draw)
+            }
+
+            for m in legal_moves {
                 if &format!("{}", MoveDisplay(m)) == &white_move {
                     board.make_move(m);
                 }
@@ -99,7 +105,13 @@ impl Game {
 
             let black_move = black.get_best_move(STARTPOS, &moves, self.time_limit)?;
 
-            for m in board.get_legal_moves() {
+            let legal_moves = board.get_legal_moves();
+
+            if moves.is_empty() && !board.is_checked(board.turn) {
+                return Ok(GameResult::Draw)
+            }
+
+            for m in legal_moves {
                 if &format!("{}", MoveDisplay(m)) == &black_move {
                     board.make_move(m);
                 }

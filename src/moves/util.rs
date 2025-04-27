@@ -91,8 +91,7 @@ impl Board {
     }
 
     pub fn is_draw(&self) -> bool {
-        (!self.is_checked(self.turn) && self.get_legal_moves().is_empty()) // stalemate 
-        || self.check_insufficient_material() // insufficient material
+        self.check_insufficient_material() // insufficient material
         || self.halfmove_clock > 100 // 50-move rule
     }
 

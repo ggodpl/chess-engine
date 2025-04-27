@@ -31,7 +31,7 @@ impl Search {
 
             let legal_moves = self.sort_moves(&board.get_legal_moves(), board);
 
-            for m in legal_moves {
+            for (m, _) in legal_moves {
                 let state = board.make_move(m);
 
                 let result = self.alphabeta(board, depth - 1, alpha, beta, false);
@@ -67,7 +67,7 @@ impl Search {
 
             let legal_moves = self.sort_moves(&board.get_legal_moves(), board);
 
-            for m in legal_moves {
+            for (m, _) in legal_moves {
                 let state = board.make_move(m);
 
                 let result = self.alphabeta(board, depth - 1, alpha, beta, true);
