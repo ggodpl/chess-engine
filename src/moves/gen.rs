@@ -4,14 +4,14 @@ use super::Move;
 
 impl Board {
     pub fn get_legal_moves(&self) -> Vec<Move> {
-        let mut moves = self.get_pseudo_legal_moves();
+        let mut moves = self.get_pseudo_legal_moves(self.turn);
         self.filter_legal_moves(&mut moves);
         
         moves
     }
 
-    pub fn get_pseudo_legal_moves(&self) -> Vec<Move> {
-        let pieces = if self.turn == PieceColor::White {
+    pub fn get_pseudo_legal_moves(&self, color: PieceColor) -> Vec<Move> {
+        let pieces = if color == PieceColor::White {
             self.bb.white_pieces
         } else {
             self.bb.black_pieces

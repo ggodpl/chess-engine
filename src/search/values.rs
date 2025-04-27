@@ -2,6 +2,8 @@ pub const PROMOTION_VALUE: f64 = 9000.0;
 pub const CHECK_VALUE: f64 = 350.0;
 pub const CASTLING_VALUE: f64 = 300.0;
 
+pub const MOBILITY_VALUE: f64 = 0.02;
+
 pub const MAX_PHASE: i32 = 24;
 
 pub const PAWN_VALUE: f64 = 100.0;

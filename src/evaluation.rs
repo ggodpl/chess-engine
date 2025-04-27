@@ -16,6 +16,13 @@ impl EvaluationResult {
             black: 0.0
         }
     }
+
+    pub fn combine(&self, other: Self) -> Self {
+        EvaluationResult {
+            white: self.white + other.white,
+            black: self.black + other.black
+        }
+    }
 }
 
 pub fn evaluate(board: &Board) -> EvaluationResult {
@@ -37,9 +44,23 @@ pub fn evaluate(board: &Board) -> EvaluationResult {
         return EvaluationResult::default();
     }
 
-    EvaluationResult {
+    let material = EvaluationResult {
         white: board.bb.count_material(PieceColor::White) as f64,
         black: board.bb.count_material(PieceColor::Black) as f64
+    };
+
+    let mobility = evaluate_mobility(board);
+
+    material.combine(mobility)
+}
+
+pub fn evaluate_mobility(board: &Board) -> EvaluationResult {
+    let white_moves = board.get_pseudo_legal_moves(PieceColor::White).len() as f64;
+    let black_moves = board.get_pseudo_legal_moves(PieceColor::Black).len() as f64;
+
+    EvaluationResult {
+        white: white_moves * MOBILITY_VALUE,
+        black: black_moves * MOBILITY_VALUE
     }
 }
 
