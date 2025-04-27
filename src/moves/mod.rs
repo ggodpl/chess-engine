@@ -1,4 +1,4 @@
-use crate::{board::Board, piece::{Piece, PieceColor, PieceType}};
+use crate::{bitboard::COLOR_MASK, board::Board, piece::{Piece, PieceColor, PieceType}};
 
 pub mod magic;
 pub mod values;
@@ -133,5 +133,40 @@ impl Board {
         };
 
         self.get_attackers(king, color.opposite()).count_ones() >= 2
+    }
+
+    pub fn check_insufficient_material(&self) -> bool {
+        let no_heavy_pieces = self.bb.count_material() == 0;
+        let white_no_minor = (self.bb.white_bishops | self.bb.white_knights).count_ones() == 0;
+        let black_no_minor = (self.bb.black_bishops | self.bb.black_knights).count_ones() == 0;
+
+        let white_one_bishop = self.bb.count_bishops(true) == 1 && self.bb.count_knights(true) == 0;
+        let white_one_knight = self.bb.count_bishops(true) == 0 && self.bb.count_knights(true) == 1;
+
+        let black_one_bishop = self.bb.count_bishops(false) == 1 && self.bb.count_knights(false) == 0;
+        let black_one_knight = self.bb.count_bishops(false) == 0 && self.bb.count_knights(false) == 1;
+
+        no_heavy_pieces && (
+            (white_no_minor && (
+                black_no_minor ||
+                black_one_bishop ||
+                black_one_knight
+            )) ||
+            (black_no_minor && (
+                white_one_bishop ||
+                white_one_knight
+            )) ||
+            white_one_bishop && black_one_bishop && self.bb.white_bishops & COLOR_MASK == self.bb.black_bishops & COLOR_MASK
+        )
+    }
+
+    pub fn is_checkmate(&self) -> bool {
+        self.is_checked(self.turn) && self.get_legal_moves().is_empty()
+    }
+
+    pub fn is_draw(&self) -> bool {
+        (!self.is_checked(self.turn) && self.get_legal_moves().is_empty()) // stalemate 
+        || self.check_insufficient_material() // insufficient material
+        || self.halfmove_clock > 100 // 50-move rule
     }
 }

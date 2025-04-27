@@ -142,6 +142,27 @@ impl Bitboard {
             self.add_piece(piece, to);
         }
     }
+
+    pub fn count_bishops(&self, white: bool) -> u32 {
+        if white {
+            self.white_bishops.count_ones()
+        } else {
+            self.black_bishops.count_ones()
+        }
+    }
+
+    pub fn count_knights(&self, white: bool) -> u32 {
+        if white {
+            self.white_knights.count_ones()
+        } else {
+            self.black_knights.count_ones()
+        }
+    }
+
+    pub fn count_material(&self) -> u32 {
+        let material = self.white_pawns | self.white_rooks | self.white_queens | self.black_pawns | self.black_rooks | self.black_queens;
+        material.count_ones()
+    }
 }
 
 pub const RANK_1: u64 = 0xFF00000000000000;
@@ -164,3 +185,5 @@ pub const A8: u64 = 0x1;
 pub const H8: u64 = 0x80;
 pub const A1: u64 = 0x100000000000000;
 pub const H1: u64 = 0x8000000000000000;
+
+pub const COLOR_MASK: u64 = 0xAA55AA55AA55AA55;
