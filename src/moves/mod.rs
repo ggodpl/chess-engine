@@ -169,4 +169,63 @@ impl Board {
         || self.check_insufficient_material() // insufficient material
         || self.halfmove_clock > 100 // 50-move rule
     }
+
+    pub fn parse_uci_string(&self, string: &str) -> Option<Move> {
+        if string.len() < 4 {
+            return None;
+        }
+
+        let chars: Vec<char> = string.chars().collect();
+
+        if !(matches!(chars[0], 'a'..='h')
+            && matches!(chars[1], '1'..='8')
+            && matches!(chars[2], 'a'..='h')
+            && matches!(chars[3], '1'..='8')) {
+            return None;
+        }
+
+        let from_file = (chars[0] as u8 - b'a') as usize;
+        let from_rank = 8 - (chars[1] as u8 - b'0') as usize;
+        let to_file = (chars[2] as u8 - b'a') as usize;
+        let to_rank = 8 - (chars[3] as u8 - b'0') as usize;
+
+        let from = Position::bitboard(from_file, from_rank);
+        let to = Position::bitboard(to_file, to_rank);
+
+        let promotion = if chars.len() > 4 {
+            match chars[4] {
+                'q' => Some(PieceType::Queen),
+                'r' => Some(PieceType::Rook),
+                'b' => Some(PieceType::Bishop),
+                'n' => Some(PieceType::Knight),
+                _ => None
+            }
+        } else { None };
+
+        let piece = self.bb.get_piece_at(from);
+
+        let piece = if let Some(piece) = piece {
+            piece
+        } else {
+            return None;
+        };
+
+        let captured = self.bb.get_piece_at(to);
+
+        let is_castling = piece.piece_type == PieceType::King && (from >> 2 == to || from << 2 == to);
+        let is_en_passant = to & self.target_square != 0;
+
+        Some(Move {
+            from,
+            to,
+            promotion,
+            captured,
+            is_castling,
+            is_en_passant,
+            is_capture: captured.is_some(),
+            is_promotion: promotion.is_some(),
+            piece_type: piece.piece_type,
+            color: piece.color
+        })
+    }
 }

@@ -5,7 +5,7 @@ pub fn display_results(engines: &Vec<Engine>) {
         .map(|e| (e.name.to_owned(), e.stats))
         .collect();
 
-    engines.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    engines.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
     for e in engines {
         println!("{} (score: {}) - {}", e.0, e.1.score, draw_bar(e.1.wins, e.1.draws, e.1.losses));
