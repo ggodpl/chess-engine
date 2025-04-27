@@ -53,4 +53,8 @@ impl Piece {
     pub fn index(&self) -> usize {
         self.piece_type.index() + if self.color == PieceColor::White { 0 } else { 6 }
     }
+
+    pub fn index_from(piece_type: PieceType, color: PieceColor) -> usize {
+        piece_type.index() + if color == PieceColor::White { 0 } else { 6 }
+    }
 }

@@ -1,6 +1,6 @@
 use crate::{bitboard::{Bitboard, A1, A8, H1, H8, RANK_2, RANK_4, RANK_5, RANK_7}, board::{Board, Castling}, piece::{Piece, PieceColor, PieceType}};
 
-use super::Move;
+use super::{Move, Position};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Meta {
@@ -11,9 +11,106 @@ pub struct Meta {
     pub castling: Castling,
 }
 
-pub type State = (Meta, Bitboard);
+pub type State = (Meta, Bitboard, Move);
 
 impl Board {
+    pub fn update_hash(&mut self, m: &Move, old_target: u64) {
+        let hash_index = Piece::index_from(m.piece_type, m.color);
+        let from = Position::from_bitboard(m.from);
+        let to = Position::from_bitboard(m.to);
+        self.hash ^= self.hash_table[hash_index * 64 + from.y * 8 + from.x];
+        self.hash ^= self.hash_table[hash_index * 64 + to.y * 8 + to.x];
+
+        if let Some(captured) = self.bb.get_piece_at(m.to) {
+            let pos = Position::from_bitboard(m.to);
+            self.hash ^= self.hash_table[captured.index() * 64 + pos.y * 8 + pos.x];
+        }
+
+        if m.is_en_passant {
+            let square = if m.color == PieceColor::White {
+                m.to << 8
+            } else {
+                m.to >> 8
+            };
+            let pos = Position::from_bitboard(square);
+            
+            self.hash ^= self.hash_table[self.bb.get_piece_at(square).unwrap().index() * 64 + pos.y * 8 + pos.x];
+        }
+
+        if m.is_castling {
+            let kingside = m.from << 2 == m.to;
+            let rook_square = if kingside {
+                m.to << 1
+            } else {
+                m.to >> 2
+            };
+
+            let rook_from = Position::from_bitboard(rook_square);
+
+            let rook_to = Position::from_bitboard(if kingside {
+                m.to >> 1
+            } else {
+                m.to << 1
+            });
+
+            let rook_index = self.bb.get_piece_at(rook_square).unwrap().index();
+
+            self.hash ^= self.hash_table[rook_index * 64 + rook_from.y * 8 + rook_from.x];
+            self.hash ^= self.hash_table[rook_index * 64 + rook_to.y * 8 + rook_to.x];
+
+            match m.to {
+                A1 => self.hash ^= self.hash_table[12 * 64 + 1],
+                H1 => self.hash ^= self.hash_table[12 * 64],
+                A8 => self.hash ^= self.hash_table[12 * 64 + 3],
+                H8 => self.hash ^= self.hash_table[12 * 64 + 2],
+                _ => {}
+            }
+        }
+
+        if m.piece_type == PieceType::King {
+            if m.color == PieceColor::White {
+                self.hash ^= self.hash_table[12 * 64];
+                self.hash ^= self.hash_table[12 * 64 + 1];
+            } else {
+                self.hash ^= self.hash_table[12 * 64 + 2];
+                self.hash ^= self.hash_table[12 * 64 + 3];
+            }
+        }
+
+        if m.piece_type == PieceType::Rook {
+            if m.color == PieceColor::White {
+                match m.from {
+                    A1 => self.hash ^= self.hash_table[12 * 64 + 1],
+                    H1 => self.hash ^= self.hash_table[12 * 64],
+                    _ => {}
+                }
+            } else if m.color == PieceColor::Black {
+                match m.from {
+                    A8 => self.hash ^= self.hash_table[12 * 64 + 3],
+                    H8 => self.hash ^= self.hash_table[12 * 64 + 2],
+                    _ => {}
+                }
+            }
+        }
+
+        if old_target != 0 {
+            self.hash ^= self.hash_table[12 * 64 + 5 + (old_target.trailing_zeros() as usize)];
+        }
+
+        if self.target_square != 0 {
+            self.hash ^= self.hash_table[12 * 64 + 5 + (self.target_square.trailing_zeros() as usize)];
+        }
+
+        if m.is_promotion {
+            self.hash ^= self.hash_table[hash_index * 64 + to.y * 8 + to.x];
+            let new_index = Piece::index_from(m.promotion.unwrap(), m.color);
+            self.hash ^= self.hash_table[new_index * 64 + to.y * 8 + to.x];
+        }
+
+        self.hash ^= self.hash_table[12 * 64 + 4];
+        self.hash ^= self.hash_table[12 * 64 + 5];
+    }
+
     pub fn make_move(&mut self, m: &Move) -> State {
         let meta = Meta {
             turn: self.turn,
@@ -122,11 +219,13 @@ impl Board {
             self.moves += 1;
         }
 
-        (meta, bb)
+        self.update_hash(m, meta.target_square);
+
+        (meta, bb, m.clone())
     }
 
     pub fn unmake_move(&mut self, state: &State) {
-        let (meta, bb) = state;
+        let (meta, bb, m) = state;
 
         self.turn = meta.turn;
         self.moves = meta.moves;
@@ -135,5 +234,7 @@ impl Board {
         self.castling = meta.castling;
 
         self.bb = bb.clone();
+
+        self.update_hash(m, meta.target_square);
     }
 }
