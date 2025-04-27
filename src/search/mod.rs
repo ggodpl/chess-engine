@@ -4,6 +4,8 @@ use std::time::Instant;
 use crate::{board::Board, moves::Move};
 
 pub mod minimax;
+pub mod order;
+pub mod values;
 
 #[derive(Debug, Clone)]
 pub struct SearchResult {

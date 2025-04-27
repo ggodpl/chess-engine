@@ -1,4 +1,4 @@
-use crate::{board::Board, piece::PieceColor};
+use crate::{board::Board, piece::{PieceColor, PieceType}, search::values::*};
 
 pub struct EvaluationResult {
     pub white: f64,
@@ -40,5 +40,33 @@ pub fn evaluate(board: &Board) -> EvaluationResult {
     EvaluationResult {
         white: board.bb.count_material(PieceColor::White) as f64,
         black: board.bb.count_material(PieceColor::Black) as f64
+    }
+}
+
+pub fn evaluate_position(board: &Board, piece_type: PieceType, x: usize, y: usize) -> f64 {
+    match piece_type {
+        PieceType::Pawn => PAWN_TABLE[y][x],
+        PieceType::Knight => KNIGHT_TABLE[y][x],
+        PieceType::Bishop => BISHOP_TABLE[y][x],
+        PieceType::Rook => ROOK_TABLE[y][x],
+        PieceType::Queen => QUEEN_TABLE[y][x],
+        PieceType::King => {
+            let phase = board.calculate_phase();
+            (KING_MIDDLEGAME_TABLE[y][x] * (1.0 - phase)) + (KING_ENDGAME_TABLE[y][x] * phase)
+        }
+    }
+}
+
+impl Board {
+    pub fn calculate_phase(&self) -> f64 {
+        let mut phase = MAX_PHASE;
+
+        phase -= (self.bb.white_knights | self.bb.black_knights | self.bb.white_bishops | self.bb.black_bishops).count_ones() as i32
+            + (self.bb.white_rooks | self.bb.black_rooks).count_ones() as i32 * 2
+            + (self.bb.white_queens | self.bb.black_queens).count_ones() as i32 * 4;
+
+        phase = phase.clamp(0, MAX_PHASE);
+
+        phase as f64 / MAX_PHASE as f64
     }
 }

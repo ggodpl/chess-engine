@@ -29,7 +29,7 @@ impl Search {
             let mut value = f64::NEG_INFINITY;
             let mut moves = vec![];
 
-            let legal_moves = board.get_legal_moves();
+            let legal_moves = self.sort_moves(&board.get_legal_moves(), board);
 
             for m in &legal_moves {
                 let state = board.make_move(m);
@@ -65,7 +65,7 @@ impl Search {
             let mut value = f64::INFINITY;
             let mut moves = vec![];
 
-            let legal_moves = board.get_legal_moves();
+            let legal_moves = self.sort_moves(&board.get_legal_moves(), board);
 
             for m in &legal_moves {
                 let state = board.make_move(m);
