@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{board::Board, moves::{Move, Position}, piece::{PieceColor, PieceType}, search::SearchResult};
+use crate::{board::Board, moves::{helper::{get_from, get_promotion, get_to}, Move, Position}, piece::{PieceColor, PieceType}, search::SearchResult};
 
 impl Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -38,9 +38,17 @@ impl Display for Board {
     }
 }
 
-impl Display for Move {
+pub struct MoveDisplay(pub Move);
+
+impl Display for MoveDisplay {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let promotion_char = if let Some(piece_type) = self.promotion {
+        let m = self.0;
+
+        let promotion = get_promotion(m);
+        let from = get_from(m);
+        let to = get_to(m);
+
+        let promotion_char = if let Some(piece_type) = promotion {
             match piece_type {
                 PieceType::Knight => "n",
                 PieceType::Bishop => "b",
@@ -52,7 +60,7 @@ impl Display for Move {
             ""
         };
 
-        write!(f, "{}{}{}", Position::from_bitboard(self.from), Position::from_bitboard(self.to), promotion_char)
+        write!(f, "{}{}{}", Position::from_bitboard(from), Position::from_bitboard(to), promotion_char)
     }
 }
 
@@ -61,7 +69,7 @@ pub struct MoveList(pub Vec<Move>);
 impl Display for MoveList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for m in &self.0 {
-            write!(f, "{} ", m)?;
+            write!(f, "{} ", MoveDisplay(*m))?;
         }
 
         Ok(())

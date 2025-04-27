@@ -1,6 +1,6 @@
 use std::{io::{self, Write}, sync::Arc};
 
-use crate::{board::Board, moves::{magic::Magic, tables::AttackTables}, piece::PieceColor, search::Search};
+use crate::{board::Board, display::MoveDisplay, moves::{magic::Magic, tables::AttackTables}, piece::PieceColor, search::Search};
 
 pub struct Uci {
     pub magic: Arc<Magic>,
@@ -176,7 +176,7 @@ impl Uci {
         let best_move = result.moves.first();
 
         if let Some(m) = best_move.as_ref() {
-            println!("bestmove {}", m);
+            println!("bestmove {}", MoveDisplay(**m));
         } else {
             println!("bestmove 0000");
         }
@@ -185,7 +185,7 @@ impl Uci {
     pub fn make_move(&mut self, move_str: &str) {
         let m = self.board.parse_uci_string(move_str);
 
-        if let Some(m) = &m {
+        if let Some(m) = m {
             self.board.make_move(m);
         }
     }

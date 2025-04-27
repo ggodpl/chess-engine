@@ -1,6 +1,6 @@
 use crate::{bitboard::{AB_FILE_INV, A_FILE_INV, GH_FILE_INV, H_FILE_INV, RANK_1, RANK_2, RANK_7, RANK_8}, board::Board, piece::{Piece, PieceColor, PieceType}};
 
-use super::Move;
+use super::{helper::{create, to_move_type}, Move};
 
 impl Board {
     pub fn get_legal_moves(&self) -> Vec<Move> {
@@ -98,40 +98,24 @@ impl Board {
 
             if is_promotion {
                 for piece_type in [PieceType::Queen, PieceType::Rook, PieceType::Bishop, PieceType::Knight] {
-                    moves.push(Move {
-                        from: square,
-                        to,
-                        captured: self.bb.get_piece_at(to),
-                        is_capture,
-                        is_en_passant,
-                        is_castling: false,
-                        promotion: Some(piece_type),
-                        is_promotion,
-                        piece_type: piece.piece_type,
-                        color: piece.color,
-                    });
+                    moves.push(create(
+                        square, 
+                        to, 
+                        Some(piece_type), 
+                        to_move_type(is_capture, false, is_en_passant), 
+                        piece.piece_type, 
+                        piece.color
+                    ));
                 }
             } else {
-                moves.push(Move {
-                    from: square,
-                    to,
-                    captured: if is_en_passant {
-                        self.bb.get_piece_at(if piece.color == PieceColor::White {
-                            to << 8
-                        } else {
-                            to >> 8
-                        })
-                    } else {
-                        self.bb.get_piece_at(to)
-                    },
-                    is_capture,
-                    is_en_passant,
-                    is_castling: false,
-                    promotion: None,
-                    is_promotion,
-                    piece_type: piece.piece_type,
-                    color: piece.color,
-                });
+                moves.push(create(
+                    square, 
+                    to, 
+                    None,
+                    to_move_type(is_capture, false, is_en_passant),
+                    piece.piece_type,
+                    piece.color,
+                ));
             }
 
             rem &= rem - 1;
@@ -185,18 +169,14 @@ impl Board {
             && !self.is_attacked(square, color)
             && !self.is_attacked(square << 1, color) && self.is_empty(square << 1)
             && !self.is_attacked(square << 2, color) && self.is_empty(square << 2) {
-            moves.push(Move {
-                from: square,
-                to: square << 2,
-                promotion: None,
-                captured: None,
-                is_castling: true,
-                is_capture: false,
-                is_en_passant: false,
-                is_promotion: false,
-                piece_type: piece.piece_type,
-                color: piece.color,
-            });
+            moves.push(create(
+                square,
+                square << 2,
+                None,
+                super::MoveType::Castling,
+                piece.piece_type,
+                piece.color
+            ));
         }
 
         if self.castling.can_castle_qs(piece.color)
@@ -204,18 +184,14 @@ impl Board {
             && !self.is_attacked(square >> 1, color) && self.is_empty(square >> 1)
             && !self.is_attacked(square >> 2, color) && self.is_empty(square >> 2)
             && self.is_empty(square >> 3) {
-            moves.push(Move {
-                from: square,
-                to: square >> 2,
-                promotion: None,
-                captured: None,
-                is_castling: true,
-                is_capture: false,
-                is_en_passant: false,
-                is_promotion: false,
-                piece_type: piece.piece_type,
-                color: piece.color,
-            });
+            moves.push(create(
+                square,
+                square >> 2,
+                None,
+                super::MoveType::Castling,
+                piece.piece_type,
+                piece.color
+            ));
         }
     }
 
@@ -279,18 +255,14 @@ impl Board {
 
             let is_capture = to & enemy != 0;
             
-            moves.push(Move { 
-                from: square, 
+            moves.push(create(
+                square,
                 to,
-                is_capture,
-                captured: self.bb.get_piece_at(to),
-                is_castling: false,
-                is_en_passant: false,
-                is_promotion: false,
-                promotion: None,
-                piece_type: piece.piece_type,
-                color: piece.color,
-            });
+                None,
+                to_move_type(is_capture, false, false),
+                piece.piece_type,
+                piece.color
+            ));
 
             rem &= rem - 1;
         }

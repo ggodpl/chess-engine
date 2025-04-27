@@ -1,6 +1,6 @@
 use crate::{bitboard::{Bitboard, A1, A8, H1, H8, RANK_2, RANK_4, RANK_5, RANK_7}, board::{Board, Castling}, piece::{Piece, PieceColor, PieceType}};
 
-use super::{Move, Position};
+use super::{helper::{get_color, get_from, get_piece_type, get_promotion, get_to, is_capture, is_castling, is_en_passant, is_promotion}, Move, Position};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Meta {
@@ -14,43 +14,48 @@ pub struct Meta {
 pub type State = (Meta, Bitboard, Move);
 
 impl Board {
-    pub fn update_hash(&mut self, m: &Move, state: &State) {
-        let hash_index = Piece::index_from(m.piece_type, m.color);
-        let from = Position::from_bitboard(m.from);
-        let to = Position::from_bitboard(m.to);
-        self.hash ^= self.hash_table[hash_index * 64 + from.y * 8 + from.x];
-        self.hash ^= self.hash_table[hash_index * 64 + to.y * 8 + to.x];
+    pub fn update_hash(&mut self, m: Move, state: &State) {
+        let piece_type = get_piece_type(m);
+        let color = get_color(m);
+        let from = get_from(m);
+        let to = get_to(m);
 
-        if let Some(captured) = state.1.get_piece_at(m.to) {
-            let pos = Position::from_bitboard(m.to);
+        let hash_index = Piece::index_from(piece_type, color);
+        let from_pos = Position::from_bitboard(from);
+        let to_pos = Position::from_bitboard(to);
+        self.hash ^= self.hash_table[hash_index * 64 + from_pos.y * 8 + from_pos.x];
+        self.hash ^= self.hash_table[hash_index * 64 + to_pos.y * 8 + to_pos.x];
+
+        if let Some(captured) = state.1.get_piece_at(to) {
+            let pos = Position::from_bitboard(to);
             self.hash ^= self.hash_table[captured.index() * 64 + pos.y * 8 + pos.x];
         }
 
-        if m.is_en_passant {
-            let square = if m.color == PieceColor::White {
-                m.to << 8
+        if is_en_passant(m) {
+            let square = if color == PieceColor::White {
+                to << 8
             } else {
-                m.to >> 8
+                to >> 8
             };
             let pos = Position::from_bitboard(square);
             
             self.hash ^= self.hash_table[state.1.get_piece_at(square).unwrap().index() * 64 + pos.y * 8 + pos.x];
         }
 
-        if m.is_castling {
-            let kingside = m.from << 2 == m.to;
+        if is_castling(m) {
+            let kingside = from << 2 == to;
             let rook_square = if kingside {
-                m.to << 1
+                to << 1
             } else {
-                m.to >> 2
+                to >> 2
             };
 
             let rook_from = Position::from_bitboard(rook_square);
 
             let rook_to = Position::from_bitboard(if kingside {
-                m.to >> 1
+                to >> 1
             } else {
-                m.to << 1
+                to << 1
             });
 
             let rook_index = state.1.get_piece_at(rook_square).unwrap().index();
@@ -58,7 +63,7 @@ impl Board {
             self.hash ^= self.hash_table[rook_index * 64 + rook_from.y * 8 + rook_from.x];
             self.hash ^= self.hash_table[rook_index * 64 + rook_to.y * 8 + rook_to.x];
 
-            match m.to {
+            match to {
                 A1 => self.hash ^= self.hash_table[12 * 64 + 1],
                 H1 => self.hash ^= self.hash_table[12 * 64],
                 A8 => self.hash ^= self.hash_table[12 * 64 + 3],
@@ -67,8 +72,8 @@ impl Board {
             }
         }
 
-        if m.piece_type == PieceType::King {
-            if m.color == PieceColor::White {
+        if piece_type == PieceType::King {
+            if color == PieceColor::White {
                 self.hash ^= self.hash_table[12 * 64];
                 self.hash ^= self.hash_table[12 * 64 + 1];
             } else {
@@ -77,15 +82,15 @@ impl Board {
             }
         }
 
-        if m.piece_type == PieceType::Rook {
-            if m.color == PieceColor::White {
-                match m.from {
+        if piece_type == PieceType::Rook {
+            if color == PieceColor::White {
+                match from {
                     A1 => self.hash ^= self.hash_table[12 * 64 + 1],
                     H1 => self.hash ^= self.hash_table[12 * 64],
                     _ => {}
                 }
-            } else if m.color == PieceColor::Black {
-                match m.from {
+            } else if color == PieceColor::Black {
+                match from {
                     A8 => self.hash ^= self.hash_table[12 * 64 + 3],
                     H8 => self.hash ^= self.hash_table[12 * 64 + 2],
                     _ => {}
@@ -103,17 +108,17 @@ impl Board {
             self.hash ^= self.hash_table[12 * 64 + 5 + pos.x];
         }
 
-        if m.is_promotion {
-            self.hash ^= self.hash_table[hash_index * 64 + to.y * 8 + to.x];
-            let new_index = Piece::index_from(m.promotion.unwrap(), m.color);
-            self.hash ^= self.hash_table[new_index * 64 + to.y * 8 + to.x];
+        if is_promotion(m) {
+            self.hash ^= self.hash_table[hash_index * 64 + to_pos.y * 8 + to_pos.x];
+            let new_index = Piece::index_from(get_promotion(m).unwrap(), color);
+            self.hash ^= self.hash_table[new_index * 64 + to_pos.y * 8 + to_pos.x];
         }
 
         self.hash ^= self.hash_table[12 * 64 + 4];
         self.hash ^= self.hash_table[12 * 64 + 5];
     }
 
-    pub fn make_move(&mut self, m: &Move) -> State {
+    pub fn make_move(&mut self, m: Move) -> State {
         let meta = Meta {
             turn: self.turn,
             moves: self.moves,
@@ -124,10 +129,15 @@ impl Board {
 
         let bb = self.bb.clone();
 
+        let piece_type = get_piece_type(m);
+        let color = get_color(m);
+        let from = get_from(m);
+        let to = get_to(m);
+
         // capture
-        if let Some(captured) = self.bb.get_piece_at(m.to) {
+        if let Some(captured) = self.bb.get_piece_at(to) {
             if captured.piece_type == PieceType::Rook {
-                match m.to {
+                match to {
                     A1 => self.castling.white.1 = false,
                     H1 => self.castling.white.0 = false,
                     A8 => self.castling.black.1 = false,
@@ -136,32 +146,32 @@ impl Board {
                 }
             }
         }
-        self.bb.remove_piece_at(m.to);
+        self.bb.remove_piece_at(to);
 
-        self.bb.move_piece(m.from, m.to);
+        self.bb.move_piece(from, to);
 
-        if m.is_promotion {
-            self.bb.remove_piece_at(m.to);
-            self.bb.add_piece(Piece { color: m.color, piece_type: m.promotion.unwrap() }, m.to);
+        if is_promotion(m) {
+            self.bb.remove_piece_at(to);
+            self.bb.add_piece(Piece { color: color, piece_type: get_promotion(m).unwrap() }, to);
         }
 
-        if m.is_en_passant {
-            self.bb.remove_piece_at(if m.color == PieceColor::White {
-                m.to << 8
+        if is_en_passant(m) {
+            self.bb.remove_piece_at(if color == PieceColor::White {
+                to << 8
             } else {
-                m.to >> 8
+                to >> 8
             });
         }
 
-        if m.is_castling {
-            let kingside = m.from << 2 == m.to;
+        if is_castling(m) {
+            let kingside = from << 2 == to;
             if kingside {
-                self.bb.move_piece(m.to << 1, m.to >> 1);
+                self.bb.move_piece(to << 1, to >> 1);
             } else {
-                self.bb.move_piece(m.to >> 2, m.to << 1);
+                self.bb.move_piece(to >> 2, to << 1);
             }
 
-            match m.to {
+            match to {
                 A1 => self.castling.white.1 = false,
                 H1 => self.castling.white.0 = false,
                 A8 => self.castling.black.1 = false,
@@ -170,23 +180,23 @@ impl Board {
             }
         }
 
-        if m.piece_type == PieceType::King {
-            if m.color == PieceColor::White {
+        if piece_type == PieceType::King {
+            if color == PieceColor::White {
                 self.castling.white = (false, false);
             } else {
                 self.castling.black = (false, false);
             }
         }
 
-        if m.piece_type == PieceType::Rook {
-            if m.color == PieceColor::White {
-                match m.from {
+        if piece_type == PieceType::Rook {
+            if color == PieceColor::White {
+                match from {
                     A1 => self.castling.white.1 = false,
                     H1 => self.castling.white.0 = false,
                     _ => {}
                 }
-            } else if m.color == PieceColor::Black {
-                match m.from {
+            } else if color == PieceColor::Black {
+                match from {
                     A8 => self.castling.black.1 = false,
                     H8 => self.castling.black.0 = false,
                     _ => {}
@@ -194,13 +204,13 @@ impl Board {
             }
         }
 
-        if m.piece_type == PieceType::Pawn {
-            if (m.color == PieceColor::White && m.from & RANK_2 != 0 && m.to & RANK_4 != 0) ||
-               (m.color == PieceColor::Black && m.from & RANK_7 != 0 && m.to & RANK_5 != 0) {
-                self.target_square = if m.color == PieceColor::White {
-                    m.to << 8
+        if piece_type == PieceType::Pawn {
+            if (color == PieceColor::White && from & RANK_2 != 0 && to & RANK_4 != 0) ||
+               (color == PieceColor::Black && from & RANK_7 != 0 && to & RANK_5 != 0) {
+                self.target_square = if color == PieceColor::White {
+                    to << 8
                 } else {
-                    m.to >> 8
+                    to >> 8
                 };
             } else {
                 self.target_square = 0;
@@ -211,7 +221,7 @@ impl Board {
 
         self.turn = self.turn.opposite();
     
-        if m.is_capture || m.is_promotion || m.piece_type == PieceType::Pawn {
+        if is_capture(m) || is_promotion(m) || piece_type == PieceType::Pawn {
             self.halfmove_clock = 0;
         } else {
             self.halfmove_clock += 1;
@@ -239,6 +249,6 @@ impl Board {
 
         self.bb = bb.clone();
 
-        self.update_hash(m, state);
+        self.update_hash(*m, state);
     }
 }

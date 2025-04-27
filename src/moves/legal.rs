@@ -1,20 +1,22 @@
 use crate::{board::Board, piece::{PieceColor, PieceType}};
 
-use super::Move;
+use super::{helper::{get_from, get_piece_type, get_to, is_en_passant}, Move};
 
 impl Board {
     pub fn filter_legal_moves(&self, moves: &mut Vec<Move>) {
-        moves.retain(|m| if m.piece_type == PieceType::King { !self.is_attacked(m.to, self.turn.opposite()) } else { true });
+        moves.retain(|m| if get_piece_type(*m) == PieceType::King { !self.is_attacked(get_to(*m), self.turn.opposite()) } else { true });
         
         if self.is_double_checked(self.turn) {
-            moves.retain(|m| m.piece_type == PieceType::King);
+            moves.retain(|m| get_piece_type(*m) == PieceType::King);
             return;
         }
 
         if self.is_checked(self.turn) {
             moves.retain(|m| {
-                if m.piece_type == PieceType::King {
-                    !self.is_attacked(m.to, self.turn.opposite())
+                let to = get_to(*m);
+                let from = get_from(*m);
+                if get_piece_type(*m) == PieceType::King {
+                    !self.is_attacked(to, self.turn.opposite())
                 } else {
                     let king = if self.turn == PieceColor::White {
                         self.bb.white_king
@@ -22,20 +24,20 @@ impl Board {
                         self.bb.black_king
                     };
 
-                    if m.is_en_passant {
+                    if is_en_passant(*m) {
                         let captured = if self.turn == PieceColor::White {
-                            m.to << 8
+                            to << 8
                         } else {
-                            m.to >> 8
+                            to >> 8
                         };
 
                         let attacker = self.get_attackers(king, self.turn.opposite());
 
-                        if attacker & captured != 0 { return !self.is_pinned(m.from); }
+                        if attacker & captured != 0 { return !self.is_pinned(from); }
                     }
 
                     // when a piece is pinned, its not able to block a check, no matter how the position looks
-                    !self.is_pinned(m.from) && self.attacks.is_between(m.to, self.get_attackers(king, self.turn.opposite()), king)
+                    !self.is_pinned(from) && self.attacks.is_between(to, self.get_attackers(king, self.turn.opposite()), king)
                 }
             });
             return;
@@ -48,28 +50,31 @@ impl Board {
                 self.bb.black_king
             };
             
-            if m.is_en_passant {
+            let to = get_to(*m);
+            let from = get_from(*m);
+
+            if is_en_passant(*m) {
                 // handle phantom pins
-                let line = self.attacks.get_line_mask(m.from, king);
-                let ray = self.attacks.get_ray(m.from, king);
+                let line = self.attacks.get_line_mask(from, king);
+                let ray = self.attacks.get_ray(from, king);
 
                 if line == 0 { return true; }
                 
                 let captured = if self.turn == PieceColor::White {
-                    m.to << 8
+                    to << 8
                 } else {
-                    m.to >> 8
+                    to >> 8
                 };
 
                 // a piece is blocking the pin
-                if ray & !m.from & !king & !captured & self.bb.pieces != 0 { return true; }
+                if ray & !from & !king & !captured & self.bb.pieces != 0 { return true; }
 
                 let occupancy = self.bb.pieces & !captured;
 
-                let complement = line & !ray & !m.from & !king;
+                let complement = line & !ray & !from & !king;
                         
-                let bishop_attackers = self.magic.get_bishop_moves(m.from.trailing_zeros() as usize, occupancy);
-                let rook_attackers = self.magic.get_rook_moves(m.from.trailing_zeros() as usize, occupancy);
+                let bishop_attackers = self.magic.get_bishop_moves(from.trailing_zeros() as usize, occupancy);
+                let rook_attackers = self.magic.get_rook_moves(from.trailing_zeros() as usize, occupancy);
         
                 let enemy_bishops = if self.turn == PieceColor::White {
                     self.bb.black_bishops | self.bb.black_queens
@@ -88,12 +93,12 @@ impl Board {
                 return complement & attackers == 0;
             }
 
-            let pin = self.get_pin(m.from);
+            let pin = self.get_pin(from);
 
             if pin != 0 {
-                let line = self.attacks.get_line_mask(m.from, king);
+                let line = self.attacks.get_line_mask(from, king);
 
-                m.to & line != 0
+                to & line != 0
             } else {
                 true
             }

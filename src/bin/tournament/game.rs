@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use mchess::{board::Board, moves::{magic::Magic, tables::AttackTables}};
+use mchess::{board::Board, display::MoveDisplay, moves::{magic::Magic, tables::AttackTables}};
 
 use crate::engine::Engine;
 
@@ -82,8 +82,8 @@ impl Game {
         for _ in 0..400 {
             let white_move = white.get_best_move(STARTPOS, &moves, self.time_limit)?;
 
-            for m in &board.get_legal_moves() {
-                if &format!("{}", m) == &white_move {
+            for m in board.get_legal_moves() {
+                if &format!("{}", MoveDisplay(m)) == &white_move {
                     board.make_move(m);
                 }
             }
@@ -99,8 +99,8 @@ impl Game {
 
             let black_move = black.get_best_move(STARTPOS, &moves, self.time_limit)?;
 
-            for m in &board.get_legal_moves() {
-                if &format!("{}", m) == &black_move {
+            for m in board.get_legal_moves() {
+                if &format!("{}", MoveDisplay(m)) == &black_move {
                     board.make_move(m);
                 }
             }

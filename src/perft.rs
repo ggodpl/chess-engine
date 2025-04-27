@@ -1,4 +1,4 @@
-use crate::board::Board;
+use crate::{board::Board, display::MoveDisplay};
 
 pub fn perft(board: &mut Board, depth: u32) -> usize {
     if depth == 0 { return 1; }
@@ -8,7 +8,7 @@ pub fn perft(board: &mut Board, depth: u32) -> usize {
 
     let mut nodes = 0;
     for m in moves {
-        let state = board.make_move(&m);
+        let state = board.make_move(m);
         nodes += perft(board, depth - 1);
         board.unmake_move(&state);
     }
@@ -29,9 +29,9 @@ pub fn split_perft(board: &mut Board, depth: u32) -> usize {
 
     let mut total_nodes = 0;
     for m in moves {
-        let move_str = format!("{}", m);
+        let move_str = format!("{}", MoveDisplay(m));
 
-        let state = board.make_move(&m);
+        let state = board.make_move(m);
         let nodes = perft(board, depth - 1);
         
         println!("{}: {}", move_str, nodes);
