@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{board::Board, moves::{Move, Position}, piece::{PieceColor, PieceType}};
+use crate::{board::Board, moves::{Move, Position}, piece::{PieceColor, PieceType}, search::SearchResult};
 
 impl Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -56,6 +56,18 @@ impl Display for Move {
     }
 }
 
+pub struct MoveList(pub Vec<Move>);
+
+impl Display for MoveList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for m in &self.0 {
+            write!(f, "{} ", m)?;
+        }
+
+        Ok(())
+    }
+}
+
 impl Display for Position {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let file_char = "abcdefgh".chars().nth(self.x).unwrap();
@@ -82,5 +94,11 @@ pub fn show_mask(mask: u64) {
             }
         }
         print!("\n");
+    }
+}
+
+impl Display for SearchResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "value: {}, moves: {}", self.value, MoveList(self.moves.clone()))
     }
 }

@@ -1,4 +1,5 @@
 use core::f64;
+use std::time::Instant;
 
 use crate::{board::Board, moves::Move};
 
@@ -25,5 +26,25 @@ impl Search {
 
     pub fn search(&mut self, board: &mut Board, depth: u8) -> SearchResult {
         self.alphabeta(board, depth, f64::NEG_INFINITY, f64::INFINITY, true)
+    }
+
+    pub fn iterative_deepening(&mut self, board: &mut Board, max_depth: u8, time_limit: u64) -> SearchResult {
+        let start = Instant::now();
+
+        let mut best_result = SearchResult { value: 0.0, moves: vec![] };
+        
+        for depth in 1..=max_depth {
+            let result = self.search(board, depth);
+            best_result = result;
+
+            let elapsed = start.elapsed().as_millis() as u64;
+            if elapsed > (time_limit * 3) / 4 {
+                break;
+            }
+
+            println!("depth {depth}: {}", best_result);
+        }
+
+        best_result
     }
 }

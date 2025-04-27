@@ -14,5 +14,7 @@ fn main() {
     println!("{}", evaluate(&board).to_value());
 
     let mut search = Search::new();
-    println!("{:?}", search.search(&mut board, 5));
+    println!("{}", search.search(&mut board, 5));
+
+    println!("{}", search.iterative_deepening(&mut board, 10, 10000));
 }
