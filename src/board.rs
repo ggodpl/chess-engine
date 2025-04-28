@@ -74,7 +74,7 @@ impl Board {
         for (j, rank) in ranks.iter().enumerate() {
             let mut i = 0;
             for char in rank.chars().into_iter() {
-                if char.is_digit(10) {
+                if char.is_ascii_digit() {
                     i += char.to_digit(10).unwrap() as usize - 1;
                 } else {
                     let color = if "PNBRQK".contains(char) {
@@ -112,8 +112,8 @@ impl Board {
         board.halfmove_clock = halfmoves.parse().unwrap_or(0);
         board.moves = moves.parse().unwrap_or(1);
 
-        board.castling.white = (c.contains("K"), c.contains("Q"));
-        board.castling.black = (c.contains("k"), c.contains("q"));
+        board.castling.white = (c.contains('K'), c.contains('Q'));
+        board.castling.black = (c.contains('k'), c.contains('q'));
 
         if target_square.len() > 0 && target_square != "-" {
             board.target_square = Position {

@@ -25,8 +25,7 @@ fn main() {
 
     let fen = args.iter().skip(1)
         .find(|arg| !arg.starts_with('-'))
-        .map(|s| s.as_str())
-        .unwrap_or(default_fen);
+        .map_or(default_fen, |s| s.as_str());
 
     let depth = args.iter().skip(1)
         .filter(|arg| !arg.starts_with('-'))

@@ -30,7 +30,7 @@ impl Uci {
         
         println!("mchess");
 
-        let mut input = String::new();
+        let mut input = String::default();
 
         loop {
             input.clear();
@@ -84,7 +84,7 @@ impl Uci {
             index += 1;
         } else if args[index] == "fen" {
             index += 1;
-            let mut fen = String::new();
+            let mut fen = String::default();
             while index < args.len() && args[index] != "moves" {
                 if !fen.is_empty() { fen.push(' '); }
                 fen.push_str(args[index]);

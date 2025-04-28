@@ -8,7 +8,7 @@ impl Display for Board {
         for i in 0..8 {
             write!(f, "{} ", "abcdefgh".chars().nth(i).unwrap())?;
         }
-        write!(f, "\n")?;
+        writeln!(f, "")?;
         for rank in 0..8 {
             write!(f, "{} ", 8 - rank)?;
             for file in 0..8 {
@@ -32,7 +32,7 @@ impl Display for Board {
                     write!(f, ". ")?;
                 }
             }
-            write!(f, "\n")?;
+            writeln!(f, "")?;
         }
         Ok(())
     }
@@ -89,7 +89,7 @@ pub fn show_mask(mask: u64) {
     for i in 0..8 {
         print!("{} ", "abcdefgh".chars().nth(i).unwrap());
     }
-    print!("\n");
+    println!("");
     for rank in 0..8 {
         print!("{} ", 8 - rank);
         for file in 0..8 {
@@ -101,7 +101,7 @@ pub fn show_mask(mask: u64) {
                 print!("1 ");
             }
         }
-        print!("\n");
+        println!("");
     }
 }
 

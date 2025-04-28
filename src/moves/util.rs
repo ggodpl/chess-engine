@@ -63,8 +63,8 @@ impl Board {
 
     pub fn check_insufficient_material(&self) -> bool {
         let no_heavy_pieces = self.bb.count_non_bk() == 0;
-        let white_no_minor = (self.bb.white_bishops | self.bb.white_knights).count_ones() == 0;
-        let black_no_minor = (self.bb.black_bishops | self.bb.black_knights).count_ones() == 0;
+        let white_no_minor = (self.bb.white_bishops | self.bb.white_knights) == 0;
+        let black_no_minor = (self.bb.black_bishops | self.bb.black_knights) == 0;
 
         let white_one_bishop = self.bb.count_bishops(true) == 1 && self.bb.count_knights(true) == 0;
         let white_one_knight = self.bb.count_bishops(true) == 0 && self.bb.count_knights(true) == 1;

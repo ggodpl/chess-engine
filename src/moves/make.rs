@@ -152,7 +152,7 @@ impl Board {
 
         if is_promotion(m) {
             self.bb.remove_piece_at(to);
-            self.bb.add_piece(Piece { color: color, piece_type: get_promotion(m).unwrap() }, to);
+            self.bb.add_piece(Piece { color, piece_type: get_promotion(m).unwrap() }, to);
         }
 
         if is_en_passant(m) {
@@ -247,7 +247,7 @@ impl Board {
         self.target_square = meta.target_square;
         self.castling = meta.castling;
 
-        self.bb = bb.clone();
+        self.bb.clone_from(bb);
 
         self.update_hash(*m, state);
     }

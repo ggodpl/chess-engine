@@ -77,8 +77,8 @@ impl Engine {
             .ok_or_else(|| "Engine stdout not available".to_string())?;
 
         let mut reader = BufReader::new(stdout);
-        let mut response = String::new();
-        let mut line = String::new();
+        let mut response = String::default();
+        let mut line = String::default();
 
         loop {
             line.clear();
