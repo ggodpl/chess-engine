@@ -34,6 +34,7 @@ pub struct Search {
     pub tt: HashMap<i64, Node>,
     pub tt_hits: usize,
     current_generation: u16,
+    killer_moves: [[Option<Move>; 2]; 100],
 }
 
 impl Search {
@@ -45,6 +46,7 @@ impl Search {
             tt: HashMap::new(),
             tt_hits: 0,
             current_generation: 0,
+            killer_moves: [[None; 2]; 100],
         }
     }
 

@@ -1,6 +1,6 @@
 use core::f64;
 
-use crate::{board::Board, evaluation::evaluate};
+use crate::{board::Board, evaluation::evaluate, moves::{helper::is_capture, Move}};
 
 use super::{Node, NodeType, Search, SearchResult};
 
@@ -60,7 +60,7 @@ impl Search {
 
             let mut node_type = NodeType::All;
 
-            let legal_moves = self.sort_moves(&board.get_legal_moves(), board);
+            let legal_moves = self.sort_moves(&board.get_legal_moves(), board, depth);
 
             for (m, _) in legal_moves {
                 let state = board.make_move(m);
@@ -88,6 +88,7 @@ impl Search {
 
                 if value >= beta {
                     node_type = NodeType::Cut;
+                    self.store_killer_move(&m, depth);
                     break;
                 }
 
@@ -111,7 +112,7 @@ impl Search {
 
             let mut node_type = NodeType::All;
 
-            let legal_moves = self.sort_moves(&board.get_legal_moves(), board);
+            let legal_moves = self.sort_moves(&board.get_legal_moves(), board, depth);
 
             for (m, _) in legal_moves {
                 let state = board.make_move(m);
@@ -166,5 +167,14 @@ impl Search {
         }
 
         self.tt.insert(hash, node);
+    }
+
+    fn store_killer_move(&mut self, m: &Move, depth: u8) {
+        if !is_capture(*m) {
+            if Some(m) != self.killer_moves[depth as usize][0].as_ref() {
+                self.killer_moves[depth as usize][1] = self.killer_moves[depth as usize][0];
+                self.killer_moves[depth as usize][0] = Some(*m);
+            }
+        }
     }
 }
