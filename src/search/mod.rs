@@ -35,6 +35,7 @@ pub struct Search {
     pub tt_hits: usize,
     current_generation: u16,
     killer_moves: [[Option<Move>; 2]; 100],
+    history: [[i32; 64]; 12],
 }
 
 impl Search {
@@ -47,6 +48,7 @@ impl Search {
             tt_hits: 0,
             current_generation: 0,
             killer_moves: [[None; 2]; 100],
+            history: [[0; 64]; 12],
         }
     }
 

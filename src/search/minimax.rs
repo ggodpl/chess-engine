@@ -1,20 +1,17 @@
 use core::f64;
 
-use crate::{board::Board, evaluation::evaluate, moves::{helper::is_capture, Move}};
+use crate::{board::Board, evaluation::evaluate, moves::{helper::{get_color, get_piece_type, get_to, is_capture}, Move}, piece::Piece};
 
 use super::{Node, NodeType, Search, SearchResult};
 
 impl Search {
-    pub(crate) fn alphabeta(&mut self, board: &mut Board, depth: u8, _alpha: f64, _beta: f64, maximizer: bool) -> SearchResult {
+    pub(crate) fn alphabeta(&mut self, board: &mut Board, depth: u8, mut alpha: f64, mut beta: f64, maximizer: bool) -> SearchResult {
         if self.is_stopping {
             return SearchResult {
                 value: 0.0,
                 moves: vec![]
             }
         }
-
-        let mut alpha = _alpha;
-        let mut beta = _beta;
 
         self.nodes += 1;
 
@@ -89,6 +86,7 @@ impl Search {
                 if value >= beta {
                     node_type = NodeType::Cut;
                     self.store_killer_move(&m, depth);
+                    self.store_history(&m, depth);
                     break;
                 }
 
@@ -140,6 +138,8 @@ impl Search {
 
                 if value <= alpha {
                     node_type = NodeType::Cut;
+                    self.store_killer_move(&m, depth);
+                    self.store_history(&m, depth);
                     break;
                 }
             }
@@ -174,6 +174,23 @@ impl Search {
             if Some(m) != self.killer_moves[depth as usize][0].as_ref() {
                 self.killer_moves[depth as usize][1] = self.killer_moves[depth as usize][0];
                 self.killer_moves[depth as usize][0] = Some(*m);
+            }
+        }
+    }
+
+    fn store_history(&mut self, m: &Move, depth: u8) {
+        let m = *m;
+
+        let piece_index = Piece::index_from(get_piece_type(m), get_color(m));
+        let to = get_to(m).trailing_zeros() as usize;
+        
+        self.history[piece_index][to] += (depth as i32) * (depth as i32);
+
+        if self.history[piece_index][to] > 10000 {
+            for p in 0..12 {
+                for s in 0..64 {
+                    self.history[p][s] /= 2;
+                }
             }
         }
     }

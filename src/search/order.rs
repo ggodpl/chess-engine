@@ -1,4 +1,4 @@
-use crate::{board::Board, evaluation::evaluate_position, moves::{helper::{get_captured, get_color, get_piece_type, get_to, is_capture, is_castling, is_promotion}, Move, Position}, piece::PieceColor};
+use crate::{board::Board, evaluation::evaluate_position, moves::{helper::{get_captured, get_color, get_piece_type, get_to, is_capture, is_castling, is_promotion}, Move, Position}, piece::{Piece, PieceColor}};
 
 use super::{values::*, Search};
 
@@ -23,17 +23,22 @@ impl Search {
         if let Some(entry) = self.tt.get(&board.hash) {
             if let Some(tt_move) = entry.best_move {
                 if m == tt_move {
-                    value += 10000.0;
+                    value += TT_VALUE;
                 }
             }
         }
 
         if !is_capture(m) {
             if Some(m) == self.killer_moves[depth as usize][0] {
-                value += 900.0;
+                value += KILLER_MOVE_0;
             } else if Some(m) == self.killer_moves[depth as usize][1] {
-                value += 800.0;
+                value += KILLER_MOVE_1;
             }
+
+            let piece_index = Piece::index_from(get_piece_type(m), get_color(m));
+            let to = get_to(m).trailing_zeros() as usize;
+
+            value += (self.history[piece_index][to] as f64) / HISTORY_VALUE;
         }
 
         if is_promotion(m) {

@@ -1,6 +1,10 @@
+pub const TT_VALUE: f64 = 10000.0;
 pub const PROMOTION_VALUE: f64 = 9000.0;
+pub const KILLER_MOVE_0: f64 = 900.0;
+pub const KILLER_MOVE_1: f64 = 800.0;
 pub const CHECK_VALUE: f64 = 350.0;
 pub const CASTLING_VALUE: f64 = 300.0;
+pub const HISTORY_VALUE: f64 = 100.0;
 
 pub const MOBILITY_VALUE: f64 = 0.02;
 
