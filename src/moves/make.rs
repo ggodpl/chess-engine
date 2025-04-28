@@ -11,7 +11,7 @@ pub struct Meta {
     pub castling: Castling,
 }
 
-pub type State = (Meta, Bitboard, Move);
+pub type State = (Meta, Bitboard, i64);
 
 impl Board {
     pub fn update_hash(&mut self, m: Move, state: &State) {
@@ -231,7 +231,7 @@ impl Board {
             self.moves += 1;
         }
 
-        let state = (meta, bb, m.clone());
+        let state = (meta, bb, self.hash.clone());
 
         self.update_hash(m, &state);
 
@@ -239,7 +239,7 @@ impl Board {
     }
 
     pub fn unmake_move(&mut self, state: &State) {
-        let (meta, bb, m) = state;
+        let (meta, bb, hash) = state;
 
         self.turn = meta.turn;
         self.moves = meta.moves;
@@ -249,6 +249,6 @@ impl Board {
 
         self.bb.clone_from(bb);
 
-        self.update_hash(*m, state);
+        self.hash.clone_from(hash);
     }
 }
