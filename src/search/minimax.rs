@@ -28,7 +28,7 @@ impl Search {
         let hash = board.hash;
 
         if let Some(entry) = self.tt.get(&hash) {
-            if entry.depth >= depth {
+            if entry.generation == self.current_generation && entry.depth >= depth {
                 self.tt_hits += 1;
                 match entry.node_type {
                     NodeType::PV => {
@@ -97,7 +97,8 @@ impl Search {
                 depth,
                 node_type,
                 value,
-                best_move: moves.first().copied()
+                best_move: moves.first().copied(),
+                generation: self.current_generation,
             });
 
             return SearchResult {
@@ -146,7 +147,8 @@ impl Search {
                 depth,
                 node_type,
                 value,
-                best_move: moves.first().copied()
+                best_move: moves.first().copied(),
+                generation: self.current_generation,
             });
             
             return SearchResult {
@@ -157,6 +159,12 @@ impl Search {
     }
 
     fn store_tt(&mut self, hash: i64, node: Node) {
+        if let Some(existing) = self.tt.get(&hash) {
+            if existing.generation == node.generation && existing.depth < node.depth {
+                return;
+            }
+        }
+
         self.tt.insert(hash, node);
     }
 }

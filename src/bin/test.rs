@@ -14,5 +14,5 @@ fn main() {
     println!("{}", search.search(&mut board, 6));
 
     println!("{:?}", start.elapsed());
-    println!("{} {}", search.nodes, search.tt_hits);
+    println!("{} {} {}", search.nodes, search.tt_hits, search.tt.len());
 }

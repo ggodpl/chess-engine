@@ -11,7 +11,8 @@ pub struct Node {
     depth: u8,
     node_type: NodeType,
     value: f64,
-    best_move: Option<Move>
+    best_move: Option<Move>,
+    generation: u16,
 }
 
 pub enum NodeType {
@@ -30,8 +31,9 @@ pub struct Search {
     pub is_stopping: bool,
     pub nodes: usize,
     scored_moves: Vec<(Move, f64)>,
-    tt: HashMap<i64, Node>,
+    pub tt: HashMap<i64, Node>,
     pub tt_hits: usize,
+    current_generation: u16,
 }
 
 impl Search {
@@ -42,16 +44,19 @@ impl Search {
             scored_moves: Vec::with_capacity(0),
             tt: HashMap::new(),
             tt_hits: 0,
+            current_generation: 0,
         }
     }
 
     pub fn search(&mut self, board: &mut Board, depth: u8) -> SearchResult {
         self.is_stopping = false;
+        self.current_generation = self.current_generation.wrapping_add(1);
         self.alphabeta(board, depth, f64::NEG_INFINITY, f64::INFINITY, true)
     }
 
     pub fn iterative_deepening(&mut self, board: &mut Board, max_depth: u8, time_limit: u64) -> SearchResult {
         self.is_stopping = false;
+        self.current_generation = self.current_generation.wrapping_add(1);
         let start = Instant::now();
 
         let mut best_result = SearchResult { value: 0.0, moves: vec![] };

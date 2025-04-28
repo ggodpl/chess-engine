@@ -20,6 +20,14 @@ impl Search {
     pub(crate) fn evaluate_move(&mut self, m: Move, board: &mut Board) -> f64 {
         let mut value = mvv_lva(m, board);
 
+        if let Some(entry) = self.tt.get(&board.hash) {
+            if let Some(tt_move) = entry.best_move {
+                if m == tt_move {
+                    value += 10000.0;
+                }
+            }
+        }
+
         if is_promotion(m) {
             value += PROMOTION_VALUE;
         }
