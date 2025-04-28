@@ -39,13 +39,13 @@ impl Search {
                     },
                     NodeType::Cut if entry.value >= beta => {
                         return SearchResult {
-                            value: beta,
+                            value: entry.value,
                             moves: entry.best_move.map_or(vec![], |m| vec![m])
                         };
                     },
                     NodeType::All if entry.value <= alpha => {
                         return SearchResult {
-                            value: alpha,
+                            value: entry.value,
                             moves: entry.best_move.map_or(vec![], |m| vec![m])
                         };
                     },
