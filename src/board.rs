@@ -122,6 +122,8 @@ impl Board {
             }.to_bitboard();
         }
 
+        board.gen_hash();
+
         board
     }
 
@@ -135,7 +137,7 @@ impl Board {
 
         let mut rng = StdRng::seed_from_u64(247);
 
-        for i in 0..(64 * 12 + 4 + 2 + 8) {
+        for i in 0..(64 * 12 + 4 + 1 + 8) {
             hash_array[i] = rng.random::<i64>();
         }
 

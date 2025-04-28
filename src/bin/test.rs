@@ -11,7 +11,8 @@ fn main() {
 
     let start = Instant::now();
 
-    println!("{}", search.search(&mut board, 7));
+    println!("{}", search.search(&mut board, 6));
 
     println!("{:?}", start.elapsed());
+    println!("{} {}", search.nodes, search.tt_hits);
 }

@@ -1,11 +1,24 @@
 use core::f64;
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
 use crate::{board::Board, moves::Move};
 
 pub mod minimax;
 pub mod order;
 pub mod values;
+
+pub struct Node {
+    depth: u8,
+    node_type: NodeType,
+    value: f64,
+    best_move: Option<Move>
+}
+
+pub enum NodeType {
+    PV,  // exact score
+    Cut, // beta
+    All  // alpha
+}
 
 #[derive(Debug, Clone)]
 pub struct SearchResult {
@@ -17,6 +30,8 @@ pub struct Search {
     pub is_stopping: bool,
     pub nodes: usize,
     scored_moves: Vec<(Move, f64)>,
+    tt: HashMap<i64, Node>,
+    pub tt_hits: usize,
 }
 
 impl Search {
@@ -24,7 +39,9 @@ impl Search {
         Search { 
             is_stopping: false,
             nodes: 0,
-            scored_moves: Vec::with_capacity(0)
+            scored_moves: Vec::with_capacity(0),
+            tt: HashMap::new(),
+            tt_hits: 0,
         }
     }
 
