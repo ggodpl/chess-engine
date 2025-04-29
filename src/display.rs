@@ -89,7 +89,7 @@ pub fn show_mask(mask: u64) {
     for i in 0..8 {
         print!("{} ", "abcdefgh".chars().nth(i).unwrap());
     }
-    println!("");
+    println!();
     for rank in 0..8 {
         print!("{} ", 8 - rank);
         for file in 0..8 {
@@ -101,7 +101,7 @@ pub fn show_mask(mask: u64) {
                 print!("1 ");
             }
         }
-        println!("");
+        println!();
     }
 }
 

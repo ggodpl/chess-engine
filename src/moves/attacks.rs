@@ -50,15 +50,19 @@ impl Board {
         knight_moves & (self.bb.empty | enemy)
     }
 
+    pub fn get_king_moves(&self, square: u64) -> u64 {
+        ((square << 1) & A_FILE_INV) |
+        ((square >> 1) & H_FILE_INV) |
+        (square << 8) |
+        (square >> 8) |
+        ((square << 9) & A_FILE_INV) |
+        ((square << 7) & H_FILE_INV) |
+        ((square >> 7) & A_FILE_INV) |
+        ((square >> 9) & H_FILE_INV)
+    }
+
     pub fn get_king_attacks(&self, square: u64, enemy: u64) -> u64 {
-        let king_moves = ((square << 1) & A_FILE_INV) |
-            ((square >> 1) & H_FILE_INV) |
-            (square << 8) |
-            (square >> 8) |
-            ((square << 9) & A_FILE_INV) |
-            ((square << 7) & H_FILE_INV) |
-            ((square >> 7) & A_FILE_INV) |
-            ((square >> 9) & H_FILE_INV);
+        let king_moves = self.get_king_moves(square);
 
         king_moves & (self.bb.empty | enemy)
     }

@@ -1,4 +1,4 @@
-use crate::{board::Board, piece::{PieceColor, PieceType}, search::values::*};
+use crate::{bitboard::{A_FILE_INV, H_FILE_INV}, board::Board, piece::{PieceColor, PieceType}, search::values::*};
 
 pub struct EvaluationResult {
     pub white: f64,
@@ -51,7 +51,13 @@ pub fn evaluate(board: &mut Board) -> EvaluationResult {
 
     let mobility = evaluate_mobility(board);
 
+    let king_safety = EvaluationResult {
+        white: evaluate_king_safety(board, PieceColor::White) * KING_SAFETY_FACTOR,
+        black: evaluate_king_safety(board, PieceColor::Black) * KING_SAFETY_FACTOR
+    };
+
     material.combine(mobility)
+            .combine(king_safety)
 }
 
 pub fn evaluate_mobility(board: &Board) -> EvaluationResult {
@@ -61,6 +67,114 @@ pub fn evaluate_mobility(board: &Board) -> EvaluationResult {
     EvaluationResult {
         white: white_moves * MOBILITY_VALUE,
         black: black_moves * MOBILITY_VALUE
+    }
+}
+
+pub fn evaluate_king_safety(board: &Board, color: PieceColor) -> f64 {
+    let king = if color == PieceColor::White {
+        board.bb.white_king
+    } else {
+        board.bb.black_king
+    };
+
+    let mask = board.get_king_moves(king);
+
+    let shield = mask & if color == PieceColor::White {
+        board.bb.white_pawns
+    } else {
+        board.bb.black_pawns
+    };
+
+    let shield_value = shield.count_ones() as f64;
+
+    let breathing_penalty = if (mask & board.bb.pieces).count_ones() >= 3 {
+        BREATHING_PENALTY
+    } else {
+        0.0
+    };
+
+    let enemy_pawns = if color == PieceColor::White {
+        board.bb.black_pawns
+    } else {
+        board.bb.white_pawns
+    };
+
+    let enemy = if color == PieceColor::White {
+        board.bb.black_pieces & !board.bb.black_pawns
+    } else {
+        board.bb.white_pieces & !board.bb.white_pawns
+    };
+
+    let zones = if color == PieceColor::White {
+        let zone1 = (king <<  8) | ((king <<  9) & A_FILE_INV) | ((king <<  7) & H_FILE_INV);
+        let zone2 = (king << 16) | ((king << 17) & A_FILE_INV) | ((king << 15) & H_FILE_INV);
+        let zone3 = (king << 24) | ((king << 25) & A_FILE_INV) | ((king << 23) & H_FILE_INV);
+
+        (zone1, zone2, zone3)
+    } else {
+        let zone1 = (king >>  8) | ((king >>  9) & A_FILE_INV) | ((king >>  7) & H_FILE_INV);
+        let zone2 = (king >> 16) | ((king >> 17) & A_FILE_INV) | ((king >> 15) & H_FILE_INV);
+        let zone3 = (king >> 24) | ((king >> 25) & A_FILE_INV) | ((king >> 23) & H_FILE_INV);
+
+        (zone1, zone2, zone3)
+    };
+
+    let storm = (zones.0 & enemy_pawns, zones.1 & enemy_pawns, zones.2 & enemy_pawns);
+    let storm_value = (storm.0.count_ones() * 3 + storm.1.count_ones() * 2 + storm.2.count_ones() * 1) as f64;
+    let storm_penalty = storm_value * PAWN_STORM_PENALTY;
+
+    let storm = (zones.0 & enemy, zones.1 & enemy, zones.2 & enemy);
+    let proximity_value = (storm.0.count_ones() * 3 + storm.1.count_ones() * 2 + storm.2.count_ones() * 1) as f64;
+    let proximity_penalty = proximity_value * ENEMY_PROXIMITY_PENALTY;
+
+    let virtual_mobility = board.magic.get_queen_moves(king.trailing_zeros() as usize, board.bb.pieces & !king).count_ones();
+
+    let attacked_neighbors = mask & if color == PieceColor::White {
+        board.bb.black_attacks
+    } else {
+        board.bb.white_attacks
+    };
+    let attack_penalty = attacked_neighbors as f64 * ATTACK_PENALTY;
+
+    // positional value
+    let shift = if color == PieceColor::White {
+        63.0 - king.trailing_zeros() as f64 
+    } else {
+        king.trailing_zeros() as f64
+    };
+
+    let log_scale = (64.0_f64).log10();
+    let position_value = (64.0 - 0.5 * shift.powf(1.15)).log10() / log_scale;
+
+    let scaled_position_value = (position_value * 5.0) - 3.5;
+
+    let material = if color == PieceColor::White {
+        board.bb.count_material(PieceColor::Black) - board.bb.black_pieces.count_ones()
+    } else {
+        board.bb.count_material(PieceColor::White) - board.bb.white_pieces.count_ones()
+    };
+
+    let attack_potential = material as f64 * 0.5;
+
+    const MAX_ATTACK_POTENTIAL: f64 = 13.0;
+
+    let scale_factor = attack_potential / MAX_ATTACK_POTENTIAL;
+
+    let scale = scale_factor.min(0.2);
+
+    let phase = board.calculate_phase();
+    let score = shield_value * PAWN_SHIELD_VALUE 
+                     + scaled_position_value * phase
+                     - breathing_penalty * 1.0 - phase
+                     - storm_penalty 
+                     - proximity_penalty
+                     - virtual_mobility as f64 * VIRTUAL_MOBILITY_PENALTY
+                     - attack_penalty;
+
+    if score >= 0.0 {
+        score
+    } else {
+        score * scale
     }
 }
 

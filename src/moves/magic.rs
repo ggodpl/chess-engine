@@ -198,7 +198,7 @@ impl Magic {
             if occupancy & target != 0 { break; }
         }
 
-        for r in rank..0 {
+        for r in (0..rank).rev() {
             let target = Position::bitboard(file, r);
             attacks |= target;
             if occupancy & target != 0 { break; }
@@ -210,8 +210,8 @@ impl Magic {
             if occupancy & target != 0 { break; }
         }
 
-        for f in file..0 {
-            let target = Position::bitboard(f, rank);
+        for f in (0..file).rev() {
+            let target: u64 = Position::bitboard(f, rank);
             attacks |= target;
             if occupancy & target != 0 { break; }
         }

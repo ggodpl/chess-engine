@@ -8,6 +8,14 @@ pub const HISTORY_VALUE: f64 = 100.0;
 
 pub const MOBILITY_VALUE: f64 = 0.05;
 
+pub const PAWN_SHIELD_VALUE: f64 = 10.0;
+pub const BREATHING_PENALTY: f64 = 0.5;
+pub const PAWN_STORM_PENALTY: f64 = 1.5;
+pub const ENEMY_PROXIMITY_PENALTY: f64 = 2.0;
+pub const VIRTUAL_MOBILITY_PENALTY: f64 = 1.2;
+pub const ATTACK_PENALTY: f64 = 1.2;
+pub const KING_SAFETY_FACTOR: f64 = 0.01;
+
 pub const MAX_PHASE: i32 = 24;
 
 pub const PAWN_VALUE: f64 = 100.0;
