@@ -45,8 +45,8 @@ pub fn evaluate(board: &mut Board) -> EvaluationResult {
     }
 
     let material = EvaluationResult {
-        white: board.bb.count_material(PieceColor::White) as f64,
-        black: board.bb.count_material(PieceColor::Black) as f64
+        white: board.bb.count_material(PieceColor::White) as f64 * 2.0,
+        black: board.bb.count_material(PieceColor::Black) as f64 * 2.0
     };
 
     let mobility = evaluate_mobility(board);
