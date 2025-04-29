@@ -77,7 +77,7 @@ pub fn evaluate_king_safety(board: &Board, color: PieceColor) -> f64 {
         board.bb.black_king
     };
 
-    let mask = board.get_king_moves(king);
+    let mask = board.attacks.king_attacks[king.trailing_zeros() as usize];
 
     let shield = mask & if color == PieceColor::White {
         board.bb.white_pawns

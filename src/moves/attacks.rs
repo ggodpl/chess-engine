@@ -1,4 +1,4 @@
-use crate::{bitboard::{AB_FILE_INV, A_FILE_INV, GH_FILE_INV, H_FILE_INV, RANK_2, RANK_7}, board::Board, piece::{Piece, PieceColor}};
+use crate::{bitboard::{A_FILE_INV, H_FILE_INV, RANK_2, RANK_7}, board::Board, piece::{Piece, PieceColor}};
 
 impl Board {
     pub fn get_pawn_attacks(&self, square: u64, enemy: u64, piece: Piece) -> u64 {
@@ -38,31 +38,13 @@ impl Board {
     }
 
     pub fn get_knight_attacks(&self, square: u64, enemy: u64) -> u64 {
-        let knight_moves = ((square << 17) & A_FILE_INV) |
-            ((square << 15) & H_FILE_INV) |
-            ((square << 10) & AB_FILE_INV) |
-            ((square >> 6) & AB_FILE_INV) |
-            ((square >> 15) & A_FILE_INV) |
-            ((square >> 17) & H_FILE_INV) |
-            ((square << 6) & GH_FILE_INV) |
-            ((square >> 10) & GH_FILE_INV);
+        let knight_moves = self.attacks.knight_attacks[square.trailing_zeros() as usize];
 
         knight_moves & (self.bb.empty | enemy)
     }
 
-    pub fn get_king_moves(&self, square: u64) -> u64 {
-        ((square << 1) & A_FILE_INV) |
-        ((square >> 1) & H_FILE_INV) |
-        (square << 8) |
-        (square >> 8) |
-        ((square << 9) & A_FILE_INV) |
-        ((square << 7) & H_FILE_INV) |
-        ((square >> 7) & A_FILE_INV) |
-        ((square >> 9) & H_FILE_INV)
-    }
-
     pub fn get_king_attacks(&self, square: u64, enemy: u64) -> u64 {
-        let king_moves = self.get_king_moves(square);
+        let king_moves = self.attacks.king_attacks[square.trailing_zeros() as usize];
 
         king_moves & (self.bb.empty | enemy)
     }
