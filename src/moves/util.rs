@@ -86,7 +86,7 @@ impl Board {
         )
     }
 
-    pub fn is_checkmate(&self) -> bool {
+    pub fn is_checkmate(&mut self) -> bool {
         self.is_checked(self.turn) && self.get_legal_moves().is_empty()
     }
 

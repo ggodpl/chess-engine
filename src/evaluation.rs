@@ -25,7 +25,7 @@ impl EvaluationResult {
     }
 }
 
-pub fn evaluate(board: &Board) -> EvaluationResult {
+pub fn evaluate(board: &mut Board) -> EvaluationResult {
     if board.is_checkmate() {
         return if board.turn == PieceColor::White {
             EvaluationResult {
@@ -49,12 +49,14 @@ pub fn evaluate(board: &Board) -> EvaluationResult {
         black: board.bb.count_material(PieceColor::Black) as f64
     };
 
-    material
+    let mobility = evaluate_mobility(board);
+
+    material.combine(mobility)
 }
 
 pub fn evaluate_mobility(board: &Board) -> EvaluationResult {
-    let white_moves = board.get_pseudo_legal_moves(PieceColor::White).len() as f64;
-    let black_moves = board.get_pseudo_legal_moves(PieceColor::Black).len() as f64;
+    let white_moves = board.bb.white_attacks.count_ones() as f64;
+    let black_moves = board.bb.black_attacks.count_ones() as f64;
 
     EvaluationResult {
         white: white_moves * MOBILITY_VALUE,

@@ -20,6 +20,9 @@ pub struct Bitboard {
     pub black_knights: u64,
     pub white_pawns: u64,
     pub black_pawns: u64,
+
+    pub white_attacks: u64,
+    pub black_attacks: u64,
 }
 
 impl Bitboard {
@@ -40,7 +43,9 @@ impl Bitboard {
             white_knights: 0,
             black_knights: 0,
             white_pawns: 0,
-            black_pawns: 0
+            black_pawns: 0,
+            white_attacks: 0,
+            black_attacks: 0,
         }
     }
 

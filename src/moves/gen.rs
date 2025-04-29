@@ -3,14 +3,17 @@ use crate::{bitboard::{RANK_1, RANK_8}, board::Board, piece::{Piece, PieceColor,
 use super::{helper::{create, to_move_type}, Move};
 
 impl Board {
-    pub fn get_legal_moves(&self) -> Vec<Move> {
+    pub fn get_legal_moves(&mut self) -> Vec<Move> {
         let mut moves = self.get_pseudo_legal_moves(self.turn);
         self.filter_legal_moves(&mut moves);
         
         moves
     }
 
-    pub fn get_pseudo_legal_moves(&self, color: PieceColor) -> Vec<Move> {
+    pub fn get_pseudo_legal_moves(&mut self, color: PieceColor) -> Vec<Move> {
+        self.bb.white_attacks = 0;
+        self.bb.black_attacks = 0;
+
         let pieces = if color == PieceColor::White {
             self.bb.white_pieces
         } else {
@@ -36,6 +39,12 @@ impl Board {
                     PieceType::Knight => {
                         let mask = self.get_knight_attacks(square, enemy);
 
+                        if piece.color == PieceColor::White {
+                            self.bb.white_attacks |= mask;
+                        } else {
+                            self.bb.black_attacks |= mask;
+                        }
+
                         self.add_bitboard_moves(mask, enemy, square, &mut moves, piece);
                     },
                     PieceType::Bishop => self.add_bishop_moves(piece, square, &mut moves),
@@ -51,7 +60,7 @@ impl Board {
         moves
     }
 
-    pub(self) fn add_pawn_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
+    pub(self) fn add_pawn_moves(&mut self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let enemy = if piece.color == PieceColor::White {
             self.bb.black_pieces
         } else {
@@ -59,6 +68,12 @@ impl Board {
         };
 
         let mask = self.get_pawn_attacks(square, enemy, piece);
+
+        if piece.color == PieceColor::White {
+            self.bb.white_attacks |= mask;
+        } else {
+            self.bb.black_attacks |= mask;
+        }
 
         let mut rem = mask;
         while rem != 0 {
@@ -100,7 +115,7 @@ impl Board {
         } 
     }
 
-    pub(self) fn add_king_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
+    pub(self) fn add_king_moves(&mut self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let enemy = if piece.color == PieceColor::White {
             self.bb.black_pieces
         } else {
@@ -108,6 +123,12 @@ impl Board {
         };
 
         let mask = self.get_king_attacks(square, enemy);
+
+        if piece.color == PieceColor::White {
+            self.bb.white_attacks |= mask;
+        } else {
+            self.bb.black_attacks |= mask;
+        }
 
         self.add_bitboard_moves(mask, enemy, square, moves, piece);
 
@@ -143,8 +164,14 @@ impl Board {
         }
     }
 
-    pub(self) fn add_bishop_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
+    pub(self) fn add_bishop_moves(&mut self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let mask = self.magic.get_bishop_moves(square.trailing_zeros() as usize, self.bb.pieces);
+        
+        if piece.color == PieceColor::White {
+            self.bb.white_attacks |= mask;
+        } else {
+            self.bb.black_attacks |= mask;
+        }
 
         let enemy = if piece.color == PieceColor::White {
             self.bb.black_pieces
@@ -157,8 +184,14 @@ impl Board {
         self.add_sliding_moves(piece, mask, square, moves);
     }
 
-    pub(self) fn add_rook_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
+    pub(self) fn add_rook_moves(&mut self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let mask = self.magic.get_rook_moves(square.trailing_zeros() as usize, self.bb.pieces);
+        
+        if piece.color == PieceColor::White {
+            self.bb.white_attacks |= mask;
+        } else {
+            self.bb.black_attacks |= mask;
+        }
         
         let enemy = if piece.color == PieceColor::White {
             self.bb.black_pieces
@@ -171,8 +204,14 @@ impl Board {
         self.add_sliding_moves(piece, mask, square, moves);
     }
 
-    pub(self) fn add_queen_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
+    pub(self) fn add_queen_moves(&mut self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let mask = self.magic.get_queen_moves(square.trailing_zeros() as usize, self.bb.pieces);
+        
+        if piece.color == PieceColor::White {
+            self.bb.white_attacks |= mask;
+        } else {
+            self.bb.black_attacks |= mask;
+        }
 
         let enemy = if piece.color == PieceColor::White {
             self.bb.black_pieces
