@@ -90,6 +90,7 @@ impl Search {
         let mut best_result = SearchResult { value: 0.0, moves: vec![] };
 
         loop {
+            let start = Instant::now();
             let result = self.search(board, depth);
             
             if self.is_stopping {
@@ -99,7 +100,9 @@ impl Search {
             best_result = result;
             depth += 1;
 
-            println!("depth {depth}: {}", best_result)
+            let time = start.elapsed();
+
+            println!("depth {depth}: {} {:?}", best_result, time);
         }
 
         best_result

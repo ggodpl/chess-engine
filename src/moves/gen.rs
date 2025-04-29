@@ -1,4 +1,4 @@
-use crate::{bitboard::{AB_FILE_INV, A_FILE_INV, GH_FILE_INV, H_FILE_INV, RANK_1, RANK_2, RANK_7, RANK_8}, board::Board, piece::{Piece, PieceColor, PieceType}};
+use crate::{bitboard::{RANK_1, RANK_8}, board::Board, piece::{Piece, PieceColor, PieceType}};
 
 use super::{helper::{create, to_move_type}, Move};
 
@@ -25,9 +25,19 @@ impl Board {
             let square = 1u64 << index;
 
             if let Some(piece) = self.bb.get_piece_at(square) {
+                let enemy = if piece.color == PieceColor::White {
+                    self.bb.black_pieces
+                } else {
+                    self.bb.white_pieces
+                };
+
                 match piece.piece_type {
                     PieceType::Pawn => self.add_pawn_moves(piece, square, &mut moves),
-                    PieceType::Knight => self.add_knight_moves(piece, square, &mut moves),
+                    PieceType::Knight => {
+                        let mask = self.get_knight_attacks(square, enemy);
+
+                        self.add_bitboard_moves(mask, enemy, square, &mut moves, piece);
+                    },
                     PieceType::Bishop => self.add_bishop_moves(piece, square, &mut moves),
                     PieceType::Rook => self.add_rook_moves(piece, square, &mut moves),
                     PieceType::Queen => self.add_queen_moves(piece, square, &mut moves),
@@ -41,46 +51,14 @@ impl Board {
         moves
     }
 
-    pub fn add_pawn_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
-        let mut mask = if piece.color == PieceColor::White {
-            (square >> 8) & self.bb.empty
-        } else {
-            (square << 8) & self.bb.empty
-        };
-
-        mask |= if piece.color == PieceColor::White {
-            if (square & RANK_2) != 0 {
-                ((square >> 8) >> 8) & self.bb.empty & (mask >> 8)
-            } else {
-                0
-            }
-        } else {
-            if (square & RANK_7) != 0 {
-                ((square << 8) << 8) & self.bb.empty & (mask << 8)
-            } else {
-                0
-            }
-        };
-
+    pub(self) fn add_pawn_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let enemy = if piece.color == PieceColor::White {
             self.bb.black_pieces
         } else {
             self.bb.white_pieces
         };
 
-        let captures_mask = if piece.color == PieceColor::White {
-            ((square >> 9) & H_FILE_INV) | ((square >> 7) & A_FILE_INV)
-        } else {
-            ((square << 9) & A_FILE_INV) | ((square << 7) & H_FILE_INV)
-        };
-
-        mask |= captures_mask & enemy;
-
-        mask |= if self.target_square != 0 {
-            captures_mask & self.target_square
-        } else {
-            0
-        };
+        let mask = self.get_pawn_attacks(square, enemy, piece);
 
         let mut rem = mask;
         while rem != 0 {
@@ -121,45 +99,15 @@ impl Board {
             rem &= rem - 1;
         } 
     }
-    
-    pub fn add_knight_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
-        let knight_moves = ((square << 17) & A_FILE_INV) |
-            ((square << 15) & H_FILE_INV) |
-            ((square << 10) & AB_FILE_INV) |
-            ((square >> 6) & AB_FILE_INV) |
-            ((square >> 15) & A_FILE_INV) |
-            ((square >> 17) & H_FILE_INV) |
-            ((square << 6) & GH_FILE_INV) |
-            ((square >> 10) & GH_FILE_INV);
-        
+
+    pub(self) fn add_king_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let enemy = if piece.color == PieceColor::White {
             self.bb.black_pieces
         } else {
             self.bb.white_pieces
         };
 
-        let mask = knight_moves & (self.bb.empty | enemy);
-
-        self.add_bitboard_moves(mask, enemy, square, moves, piece);
-    }
-
-    pub fn add_king_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
-        let king_moves = ((square << 1) & A_FILE_INV) |
-            ((square >> 1) & H_FILE_INV) |
-            (square << 8) |
-            (square >> 8) |
-            ((square << 9) & A_FILE_INV) |
-            ((square << 7) & H_FILE_INV) |
-            ((square >> 7) & A_FILE_INV) |
-            ((square >> 9) & H_FILE_INV);
-
-        let enemy = if piece.color == PieceColor::White {
-            self.bb.black_pieces
-        } else {
-            self.bb.white_pieces
-        };
-
-        let mask = king_moves & (self.bb.empty | enemy);
+        let mask = self.get_king_attacks(square, enemy);
 
         self.add_bitboard_moves(mask, enemy, square, moves, piece);
 
@@ -195,7 +143,7 @@ impl Board {
         }
     }
 
-    pub fn add_bishop_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
+    pub(self) fn add_bishop_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let mask = self.magic.get_bishop_moves(square.trailing_zeros() as usize, self.bb.pieces);
 
         let enemy = if piece.color == PieceColor::White {
@@ -209,7 +157,7 @@ impl Board {
         self.add_sliding_moves(piece, mask, square, moves);
     }
 
-    pub fn add_rook_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
+    pub(self) fn add_rook_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let mask = self.magic.get_rook_moves(square.trailing_zeros() as usize, self.bb.pieces);
         
         let enemy = if piece.color == PieceColor::White {
@@ -223,7 +171,7 @@ impl Board {
         self.add_sliding_moves(piece, mask, square, moves);
     }
 
-    pub fn add_queen_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
+    pub(self) fn add_queen_moves(&self, piece: Piece, square: u64, moves: &mut Vec<Move>) {
         let mask = self.magic.get_queen_moves(square.trailing_zeros() as usize, self.bb.pieces);
 
         let enemy = if piece.color == PieceColor::White {
@@ -237,7 +185,7 @@ impl Board {
         self.add_sliding_moves(piece, mask, square, moves);
     }
 
-    pub fn add_sliding_moves(&self, piece: Piece, mask: u64, square: u64, moves: &mut Vec<Move>) {
+    pub(self) fn add_sliding_moves(&self, piece: Piece, mask: u64, square: u64, moves: &mut Vec<Move>) {
         let enemy = if piece.color == PieceColor::White {
             self.bb.black_pieces
         } else {
@@ -247,7 +195,7 @@ impl Board {
         self.add_bitboard_moves(mask, enemy, square, moves, piece);
     }
 
-    pub fn add_bitboard_moves(&self, mask: u64, enemy: u64, square: u64, moves: &mut Vec<Move>, piece: Piece) {
+    pub(self) fn add_bitboard_moves(&self, mask: u64, enemy: u64, square: u64, moves: &mut Vec<Move>, piece: Piece) {
         let mut rem = mask;
         while rem != 0 {
             let index = rem.trailing_zeros() as usize;

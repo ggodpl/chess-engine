@@ -6,6 +6,7 @@ pub mod legal;
 pub mod make;
 pub mod util;
 pub mod helper;
+pub mod attacks;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Position {

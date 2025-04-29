@@ -3,7 +3,7 @@ use crate::{board::Board, evaluation::evaluate_position, moves::{helper::{get_ca
 use super::{values::*, Search};
 
 impl Search {
-    pub(crate) fn sort_moves(&mut self, moves: &Vec<Move>, board: &mut Board, depth: u8) -> Vec<(Move, f64)> {
+    pub(super) fn sort_moves(&mut self, moves: &Vec<Move>, board: &mut Board, depth: u8) -> Vec<(Move, f64)> {
         self.scored_moves.clear();
         self.scored_moves.reserve(moves.len());
 
@@ -17,7 +17,7 @@ impl Search {
         self.scored_moves.clone()
     }
 
-    pub(crate) fn evaluate_move(&mut self, m: Move, board: &mut Board, depth: u8) -> f64 {
+    pub(super) fn evaluate_move(&mut self, m: Move, board: &mut Board, depth: u8) -> f64 {
         let mut value = mvv_lva(m, board);
 
         if let Some(entry) = self.tt.get(&board.hash) {

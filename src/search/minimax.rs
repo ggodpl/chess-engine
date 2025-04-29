@@ -5,7 +5,7 @@ use crate::{board::Board, evaluation::evaluate, moves::{helper::{get_color, get_
 use super::{Node, NodeType, Search, SearchResult};
 
 impl Search {
-    pub(crate) fn alphabeta(&mut self, board: &mut Board, depth: u8, mut alpha: f64, mut beta: f64, maximizer: bool) -> SearchResult {
+    pub(super) fn alphabeta(&mut self, board: &mut Board, depth: u8, mut alpha: f64, mut beta: f64, maximizer: bool) -> SearchResult {
         if self.is_stopping {
             return SearchResult {
                 value: 0.0,
