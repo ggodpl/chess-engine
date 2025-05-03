@@ -53,14 +53,15 @@ fn kiwipete() {
 #[test]
 fn position3() {
     let expected = [
-        1,       // depth 0
-        14,      // depth 1
-        191,     // depth 2
-        2812,    // depth 3
-        43238,   // depth 4
-        674624,  // depth 5
-        11030083, // depth 6
-        178633661 // depth 7
+        1,         // depth 0
+        14,        // depth 1
+        191,       // depth 2
+        2812,      // depth 3
+        43238,     // depth 4
+        674624,    // depth 5
+        11030083,  // depth 6
+        178633661, // depth 7
+        3009794393 // depth 8
     ];
 
     test_fen(&expected, "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1 ");

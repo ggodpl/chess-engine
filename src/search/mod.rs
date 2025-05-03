@@ -102,7 +102,9 @@ impl Search {
 
             let time = start.elapsed();
 
-            println!("depth {depth}: {} {:?}", best_result, time);
+            println!("depth {depth}: {} {:?}, nodes: {} NPS: {:.2}", best_result, time, self.nodes, self.nodes as f64 / time.as_secs_f64());
+
+            self.nodes = 0;
         }
 
         best_result
