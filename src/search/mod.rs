@@ -66,6 +66,7 @@ impl Search {
         let mut best_result = SearchResult { value: 0.0, moves: vec![] };
         
         for depth in 1..=max_depth {
+            let start2 = Instant::now();
             let result = self.search(board, depth);
             
             if self.is_stopping {
@@ -79,7 +80,11 @@ impl Search {
                 break;
             }
 
-            println!("depth {depth}: {}", best_result);
+            let time = start2.elapsed();
+
+            println!("depth {depth}: {} {:?}, nodes: {} NPS: {:.2}", best_result, time, self.nodes, self.nodes as f64 / time.as_secs_f64());
+            
+            self.nodes = 0;
         }
 
         best_result
@@ -98,12 +103,11 @@ impl Search {
             }
 
             best_result = result;
-            depth += 1;
-
             let time = start.elapsed();
 
             println!("depth {depth}: {} {:?}, nodes: {} NPS: {:.2}", best_result, time, self.nodes, self.nodes as f64 / time.as_secs_f64());
 
+            depth += 1;
             self.nodes = 0;
         }
 

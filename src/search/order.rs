@@ -49,7 +49,7 @@ impl Search {
             value += CASTLING_VALUE;
         }
 
-        value += ps_table(m, board);
+        value += ps_table(m, board) * 2.0;
 
         value
     }

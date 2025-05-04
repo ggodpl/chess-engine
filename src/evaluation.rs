@@ -136,18 +136,6 @@ pub fn evaluate_king_safety(board: &Board, color: PieceColor) -> f64 {
     };
     let attack_penalty = attacked_neighbors as f64 * ATTACK_PENALTY;
 
-    // positional value
-    let shift = if color == PieceColor::White {
-        63.0 - king.trailing_zeros() as f64 
-    } else {
-        king.trailing_zeros() as f64
-    };
-
-    let log_scale = (64.0_f64).log10();
-    let position_value = (64.0 - 0.5 * shift.powf(1.15)).log10() / log_scale;
-
-    let scaled_position_value = (position_value * 5.0) - 3.5;
-
     let material = if color == PieceColor::White {
         board.bb.count_material(PieceColor::Black) - board.bb.black_pieces.count_ones()
     } else {
@@ -163,8 +151,17 @@ pub fn evaluate_king_safety(board: &Board, color: PieceColor) -> f64 {
     let scale = scale_factor.min(0.2);
 
     let phase = board.calculate_phase();
+
+    let index = king.trailing_zeros() as usize;
+    let square = if color == PieceColor::White {
+        index
+    } else {
+        63 - index
+    };
+    let position_value = (KING_MIDDLEGAME_TABLE[square] * (1.0 - phase)) + (KING_ENDGAME_TABLE[square] * phase);
+
     let score = shield_value * PAWN_SHIELD_VALUE 
-                     + scaled_position_value * phase
+                     + position_value
                      - breathing_penalty * (1.0 - phase)
                      - storm_penalty 
                      - proximity_penalty
@@ -175,6 +172,47 @@ pub fn evaluate_king_safety(board: &Board, color: PieceColor) -> f64 {
         score
     } else {
         score * scale
+    }
+}
+
+pub fn evaluate_positions(board: &Board) -> EvaluationResult {
+    let mut white = 0.0;
+    let mut black = 0.0;
+
+    let phase = board.calculate_phase();
+
+    let mut rem = board.bb.pieces;
+    while rem != 0 {
+        let index = rem.trailing_zeros() as usize;
+        let piece = board.bb.get_piece_at(1u64 << index).unwrap();
+
+        let square = if piece.color == PieceColor::White {
+            index
+        } else {
+            63 - index
+        };
+
+        let value = match piece.piece_type {
+            PieceType::Pawn => PAWN_TABLE[square],
+            PieceType::Knight => KNIGHT_TABLE[square],
+            PieceType::Bishop => BISHOP_TABLE[square],
+            PieceType::Rook => ROOK_TABLE[square],
+            PieceType::Queen => QUEEN_TABLE[square],
+            PieceType::King => (KING_MIDDLEGAME_TABLE[square] * (1.0 - phase)) + (KING_ENDGAME_TABLE[square] * phase)
+        };
+
+        if piece.color == PieceColor::White {
+            white += value;
+        } else {
+            black += value;
+        }
+
+        rem &= rem - 1;
+    }
+
+    EvaluationResult {
+        white: white * 0.1,
+        black: black * 0.1,
     }
 }
 
