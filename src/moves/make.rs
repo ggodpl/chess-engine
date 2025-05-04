@@ -251,4 +251,38 @@ impl Board {
 
         self.hash.clone_from(hash);
     }
+
+    pub fn make_null_move(&mut self) -> (Meta, i64) {
+        let meta = Meta {
+            turn: self.turn,
+            moves: self.moves,
+            halfmove_clock: self.halfmove_clock,
+            target_square: self.target_square,
+            castling: self.castling
+        };
+
+        let hash = self.hash.clone();
+        
+        self.turn = self.turn.opposite();
+
+        if self.target_square != 0 {
+            let pos = Position::from_bitboard(self.target_square);
+            self.hash ^= self.hash_table[12 * 64 + 5 + pos.x];
+            self.target_square = 0;
+        }
+
+        self.hash ^= self.hash_table[12 * 64 + 4];
+        self.hash ^= self.hash_table[12 * 64 + 5];
+
+        (meta, hash)
+    }
+
+    pub fn unmake_null_move(&mut self, state: &(Meta, i64)) {
+        let (meta, hash) = state;
+
+        self.turn = meta.turn;
+        self.target_square = meta.target_square;
+
+        self.hash.clone_from(hash);
+    }
 }

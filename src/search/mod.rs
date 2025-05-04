@@ -55,7 +55,7 @@ impl Search {
     pub fn search(&mut self, board: &mut Board, depth: u8) -> SearchResult {
         self.is_stopping = false;
         self.current_generation = self.current_generation.wrapping_add(1);
-        self.alphabeta(board, depth, f64::NEG_INFINITY, f64::INFINITY, true)
+        self.alphabeta(board, depth, f64::NEG_INFINITY, f64::INFINITY, true, false)
     }
 
     pub fn iterative_deepening(&mut self, board: &mut Board, max_depth: u8, time_limit: u64) -> SearchResult {

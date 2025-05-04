@@ -1,11 +1,10 @@
 use core::f64;
-
 use crate::{board::Board, evaluation::evaluate, moves::{helper::{get_color, get_piece_type, get_to, is_capture}, Move}, piece::Piece};
 
 use super::{Node, NodeType, Search, SearchResult};
 
 impl Search {
-    pub(super) fn alphabeta(&mut self, board: &mut Board, depth: u8, mut alpha: f64, mut beta: f64, maximizer: bool) -> SearchResult {
+    pub(super) fn alphabeta(&mut self, board: &mut Board, depth: u8, mut alpha: f64, mut beta: f64, maximizer: bool, null_move: bool) -> SearchResult {
         if self.is_stopping {
             return SearchResult {
                 value: 0.0,
@@ -51,6 +50,30 @@ impl Search {
             }
         }
 
+        let is_pv = alpha != beta - 1.0;
+
+        if depth >= 3 && !board.is_checked(board.turn) && !null_move && !is_pv {
+            let r = 2 + depth / 6;
+
+            let state = board.make_null_move();
+
+            let result = self.alphabeta(board, depth.saturating_sub(r), alpha, alpha + 1.0, !maximizer, true);
+
+            board.unmake_null_move(&state);
+
+            if maximizer && result.value >= beta {
+                return SearchResult {
+                    value: beta,
+                    moves: vec![]
+                }
+            } else if !maximizer && result.value <= alpha {
+                return SearchResult {
+                    value: alpha,
+                    moves: vec![]
+                }
+            }
+        }
+
         if maximizer {
             let mut value = f64::NEG_INFINITY;
             let mut moves = vec![];
@@ -62,8 +85,8 @@ impl Search {
             for (m, _) in legal_moves {
                 let state = board.make_move(m);
 
-                let result = self.alphabeta(board, depth - 1, alpha, beta, false);
-                
+                let result = self.alphabeta(board, depth - 1, alpha, beta, false, false);
+
                 board.unmake_move(&state);
 
                 if result.value > value {
@@ -115,8 +138,8 @@ impl Search {
             for (m, _) in legal_moves {
                 let state = board.make_move(m);
 
-                let result = self.alphabeta(board, depth - 1, alpha, beta, true);
-                
+                let result = self.alphabeta(board, depth - 1, alpha, beta, true, false);
+
                 board.unmake_move(&state);
 
                 if result.value < value {
