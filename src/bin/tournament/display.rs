@@ -13,16 +13,16 @@ pub fn display_results(engines: &Vec<Engine>) {
 }
 
 fn draw_bar(wins: u32, draws: u32, losses: u32) -> String {
-    const BAR_LENGTH: u8 = 40;
+    const BAR_LENGTH: usize = 40;
     const GREEN: &str = "\x1B[92m█\x1B[39m";
     const RED: &str = "\x1B[91m█\x1B[39m";
     const GRAY: &str = "\x1B[90m█\x1B[39m";
 
     let games = wins + draws + losses;
 
-    let s_wins = ((wins as f64 / games as f64) * BAR_LENGTH as f64) as usize;
-    let s_losses = ((losses as f64 / games as f64) * BAR_LENGTH as f64) as usize;
-    let s_draws = BAR_LENGTH as usize - s_wins - s_losses;
+    let s_wins = BAR_LENGTH * wins as usize / games as usize;
+    let s_losses = BAR_LENGTH * losses as usize / games as usize;
+    let s_draws = BAR_LENGTH - s_wins - s_losses;
 
     format!("{}{}{} ({}/{}/{})", GREEN.repeat(s_wins), GRAY.repeat(s_draws), RED.repeat(s_losses), wins, draws, losses)
 }

@@ -11,7 +11,7 @@ pub struct EngineStats {
     pub score: f32,
     pub wins: u32,
     pub losses: u32,
-    pub draws: u32
+    pub draws: u32,
 }
 
 impl PartialEq for EngineStats {
