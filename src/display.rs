@@ -1,8 +1,8 @@
-use std::fmt::Display;
+use std::fmt;
 
 use crate::{board::Board, moves::{helper::{get_from, get_promotion, get_to}, Move, Position}, piece::{PieceColor, PieceType}, search::SearchResult};
 
-impl Display for Board {
+impl fmt::Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "  ")?;
         for i in 0..8 {
@@ -40,8 +40,8 @@ impl Display for Board {
 
 pub struct MoveDisplay(pub Move);
 
-impl Display for MoveDisplay {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for MoveDisplay {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let m = self.0;
 
         let promotion = get_promotion(m);
@@ -64,20 +64,20 @@ impl Display for MoveDisplay {
     }
 }
 
-pub struct MoveList(pub Vec<Move>);
+pub struct MoveList<'a>(pub &'a Vec<Move>);
 
-impl Display for MoveList {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for m in &self.0 {
-            write!(f, "{} ", MoveDisplay(*m))?;
+impl fmt::Display for MoveList<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for &m in self.0 {
+            write!(f, "{} ", MoveDisplay(m))?;
         }
 
         Ok(())
     }
 }
 
-impl Display for Position {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Position {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let file_char = "abcdefgh".chars().nth(self.x).unwrap();
 
         write!(f, "{}{}", file_char, 8 - self.y)
@@ -105,8 +105,8 @@ pub fn show_mask(mask: u64) {
     }
 }
 
-impl Display for SearchResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "value: {}, moves: {}", self.value, MoveList(self.moves.clone()))
+impl fmt::Display for SearchResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "value: {}, moves: {}", self.value, MoveList(&self.moves))
     }
 }
