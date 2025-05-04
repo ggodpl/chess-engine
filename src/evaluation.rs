@@ -165,7 +165,7 @@ pub fn evaluate_king_safety(board: &Board, color: PieceColor) -> f64 {
     let phase = board.calculate_phase();
     let score = shield_value * PAWN_SHIELD_VALUE 
                      + scaled_position_value * phase
-                     - breathing_penalty * 1.0 - phase
+                     - breathing_penalty * (1.0 - phase)
                      - storm_penalty 
                      - proximity_penalty
                      - virtual_mobility as f64 * VIRTUAL_MOBILITY_PENALTY

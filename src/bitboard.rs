@@ -111,26 +111,23 @@ impl Bitboard {
         }
     }
 
+    #[inline]
     pub fn get_piece_at(&self, square: u64) -> Option<Piece> {
         if square == 0 { return None; }
 
-        match square {
-            _ if square & self.white_pawns != 0 => Some(Piece { color: PieceColor::White, piece_type: PieceType::Pawn }),
-            _ if square & self.white_knights != 0 => Some(Piece { color: PieceColor::White, piece_type: PieceType::Knight }),
-            _ if square & self.white_bishops != 0 => Some(Piece { color: PieceColor::White, piece_type: PieceType::Bishop }),
-            _ if square & self.white_rooks != 0 => Some(Piece { color: PieceColor::White, piece_type: PieceType::Rook }),
-            _ if square & self.white_queens != 0 => Some(Piece { color: PieceColor::White, piece_type: PieceType::Queen }),
-            _ if square & self.white_king != 0 => Some(Piece { color: PieceColor::White, piece_type: PieceType::King }),
-
-            _ if square & self.black_pawns != 0 => Some(Piece { color: PieceColor::Black, piece_type: PieceType::Pawn }),
-            _ if square & self.black_knights != 0 => Some(Piece { color: PieceColor::Black, piece_type: PieceType::Knight }),
-            _ if square & self.black_bishops != 0 => Some(Piece { color: PieceColor::Black, piece_type: PieceType::Bishop }),
-            _ if square & self.black_rooks != 0 => Some(Piece { color: PieceColor::Black, piece_type: PieceType::Rook }),
-            _ if square & self.black_queens != 0 => Some(Piece { color: PieceColor::Black, piece_type: PieceType::Queen }),
-            _ if square & self.black_king != 0 => Some(Piece { color: PieceColor::Black, piece_type: PieceType::King }),
-
-            _ => None,
-        }
+        if square & self.white_pawns != 0 { Some(Piece { color: PieceColor::White, piece_type: PieceType::Pawn }) }
+        else if square & self.white_knights != 0 { Some(Piece { color: PieceColor::White, piece_type: PieceType::Knight }) }
+        else if square & self.white_bishops != 0 { Some(Piece { color: PieceColor::White, piece_type: PieceType::Bishop }) }
+        else if square & self.white_rooks != 0 { Some(Piece { color: PieceColor::White, piece_type: PieceType::Rook }) }
+        else if square & self.white_queens != 0 { Some(Piece { color: PieceColor::White, piece_type: PieceType::Queen }) }
+        else if square & self.white_king != 0 { Some(Piece { color: PieceColor::White, piece_type: PieceType::King }) }
+        else if square & self.black_pawns != 0 { Some(Piece { color: PieceColor::Black, piece_type: PieceType::Pawn }) }
+        else if square & self.black_knights != 0 { Some(Piece { color: PieceColor::Black, piece_type: PieceType::Knight }) }
+        else if square & self.black_bishops != 0 { Some(Piece { color: PieceColor::Black, piece_type: PieceType::Bishop }) }
+        else if square & self.black_rooks != 0 { Some(Piece { color: PieceColor::Black, piece_type: PieceType::Rook }) }
+        else if square & self.black_queens != 0 { Some(Piece { color: PieceColor::Black, piece_type: PieceType::Queen }) }
+        else if square & self.black_king != 0 { Some(Piece { color: PieceColor::Black, piece_type: PieceType::King }) }
+        else { None }
     }
 
     pub fn is_empty(&self, pos: Position) -> bool {
