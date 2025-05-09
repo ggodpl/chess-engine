@@ -89,7 +89,7 @@ impl Game {
             }
 
             for m in legal_moves {
-                if &format!("{}", MoveDisplay(m)) == &white_move {
+                if format!("{}", MoveDisplay(m)) == white_move {
                     board.make_move(m);
                 }
             }
@@ -112,7 +112,7 @@ impl Game {
             }
 
             for m in legal_moves {
-                if &format!("{}", MoveDisplay(m)) == &black_move {
+                if format!("{}", MoveDisplay(m)) == black_move {
                     board.make_move(m);
                 }
             }

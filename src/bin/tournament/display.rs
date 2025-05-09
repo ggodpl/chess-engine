@@ -1,6 +1,6 @@
 use crate::engine::{Engine, EngineStats};
 
-pub fn display_results(engines: &Vec<Engine>) {
+pub fn display_results(engines: &[Engine]) {
     let mut engines: Vec<(String, EngineStats)> = engines.iter()
         .map(|e| (e.name.to_owned(), e.stats))
         .collect();

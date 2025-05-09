@@ -5,16 +5,18 @@ pub struct EvaluationResult {
     pub black: f64
 }
 
-impl EvaluationResult {
-    pub fn to_value(&self) -> f64 {
-        self.white - self.black
-    }
-
-    pub fn default() -> Self {
+impl Default for EvaluationResult {
+    fn default() -> Self {
         EvaluationResult {
             white: 0.0,
             black: 0.0
         }
+    }
+}
+
+impl EvaluationResult {
+    pub fn to_value(&self) -> f64 {
+        self.white - self.black
     }
 
     pub fn combine(&self, other: Self) -> Self {
@@ -120,11 +122,11 @@ pub fn evaluate_king_safety(board: &Board, color: PieceColor) -> f64 {
     };
 
     let storm = (zones.0 & enemy_pawns, zones.1 & enemy_pawns, zones.2 & enemy_pawns);
-    let storm_value = (storm.0.count_ones() * 3 + storm.1.count_ones() * 2 + storm.2.count_ones() * 1) as f64;
+    let storm_value = (storm.0.count_ones() * 3 + storm.1.count_ones() * 2 + storm.2.count_ones()) as f64;
     let storm_penalty = storm_value * PAWN_STORM_PENALTY;
 
     let storm = (zones.0 & enemy, zones.1 & enemy, zones.2 & enemy);
-    let proximity_value = (storm.0.count_ones() * 3 + storm.1.count_ones() * 2 + storm.2.count_ones() * 1) as f64;
+    let proximity_value = (storm.0.count_ones() * 3 + storm.1.count_ones() * 2 + storm.2.count_ones()) as f64;
     let proximity_penalty = proximity_value * ENEMY_PROXIMITY_PENALTY;
 
     let virtual_mobility = board.magic.get_queen_moves(king.trailing_zeros() as usize, board.bb.pieces & !king).count_ones();
@@ -143,11 +145,9 @@ pub fn evaluate_king_safety(board: &Board, color: PieceColor) -> f64 {
     };
 
     let attack_potential = material as f64 * 0.5;
-
     const MAX_ATTACK_POTENTIAL: f64 = 13.0;
 
     let scale_factor = attack_potential / MAX_ATTACK_POTENTIAL;
-
     let scale = scale_factor.min(0.2);
 
     let phase = board.calculate_phase();

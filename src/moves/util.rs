@@ -129,11 +129,7 @@ impl Board {
 
         let piece = self.bb.get_piece_at(from);
 
-        let piece = if let Some(piece) = piece {
-            piece
-        } else {
-            return None;
-        };
+        let piece = piece?;
 
         let captured = self.bb.get_piece_at(to);
 

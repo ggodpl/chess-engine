@@ -127,7 +127,7 @@ impl Board {
             castling: self.castling
         };
 
-        let bb = self.bb.clone();
+        let bb = self.bb;
 
         let piece_type = get_piece_type(m);
         let color = get_color(m);
@@ -231,7 +231,7 @@ impl Board {
             self.moves += 1;
         }
 
-        let state = (meta, bb, self.hash.clone());
+        let state = (meta, bb, self.hash);
 
         self.update_hash(m, &state);
 
@@ -261,7 +261,7 @@ impl Board {
             castling: self.castling
         };
 
-        let hash = self.hash.clone();
+        let hash = self.hash;
         
         self.turn = self.turn.opposite();
 

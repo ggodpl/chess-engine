@@ -93,11 +93,11 @@ impl Search {
                     value = result.value;
 
                     if !result.moves.is_empty() {
-                        let mut new_moves = vec![m.clone()];
+                        let mut new_moves = vec![m];
                         new_moves.extend(result.moves);
                         moves = new_moves;
                     } else {
-                        moves = vec![m.clone()];
+                        moves = vec![m];
                     }
                 }
 
@@ -123,7 +123,7 @@ impl Search {
                 generation: self.current_generation,
             });
 
-            return SearchResult {
+            SearchResult {
                 value,
                 moves
             }
@@ -146,11 +146,11 @@ impl Search {
                     value = result.value;
                     
                     if !result.moves.is_empty() {
-                        let mut new_moves = vec![m.clone()];
+                        let mut new_moves = vec![m];
                         new_moves.extend(result.moves);
                         moves = new_moves;
                     } else {
-                        moves = vec![m.clone()];
+                        moves = vec![m];
                     }
                 }
 
@@ -175,7 +175,7 @@ impl Search {
                 generation: self.current_generation,
             });
             
-            return SearchResult {
+            SearchResult {
                 value,
                 moves
             }
@@ -193,11 +193,9 @@ impl Search {
     }
 
     fn store_killer_move(&mut self, m: &Move, depth: u8) {
-        if !is_capture(*m) {
-            if Some(m) != self.killer_moves[depth as usize][0].as_ref() {
-                self.killer_moves[depth as usize][1] = self.killer_moves[depth as usize][0];
-                self.killer_moves[depth as usize][0] = Some(*m);
-            }
+        if !is_capture(*m) && Some(m) != self.killer_moves[depth as usize][0].as_ref() {
+            self.killer_moves[depth as usize][1] = self.killer_moves[depth as usize][0];
+            self.killer_moves[depth as usize][0] = Some(*m);
         }
     }
 

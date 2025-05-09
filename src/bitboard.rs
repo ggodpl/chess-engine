@@ -168,17 +168,17 @@ impl Bitboard {
 
     pub fn count_material(&self, color: PieceColor) -> u32 {
         if color == PieceColor::White {
-            self.white_pawns.count_ones() as u32 * PieceType::Pawn.value() +
-            self.white_bishops.count_ones() as u32 * PieceType::Bishop.value() +
-            self.white_knights.count_ones() as u32 * PieceType::Knight.value() +
-            self.white_rooks.count_ones() as u32 * PieceType::Rook.value() +
-            self.white_queens.count_ones() as u32 * PieceType::Queen.value()
+            self.white_pawns.count_ones()   * PieceType::Pawn.value()   +
+            self.white_bishops.count_ones() * PieceType::Bishop.value() +
+            self.white_knights.count_ones() * PieceType::Knight.value() +
+            self.white_rooks.count_ones()   * PieceType::Rook.value()   +
+            self.white_queens.count_ones()  * PieceType::Queen.value()
         } else {
-            self.black_pawns.count_ones() as u32 * PieceType::Pawn.value() +
-            self.black_bishops.count_ones() as u32 * PieceType::Bishop.value() +
-            self.black_knights.count_ones() as u32 * PieceType::Knight.value() +
-            self.black_rooks.count_ones() as u32 * PieceType::Rook.value() +
-            self.black_queens.count_ones() as u32 * PieceType::Queen.value()
+            self.black_pawns.count_ones()   * PieceType::Pawn.value()   +
+            self.black_bishops.count_ones() * PieceType::Bishop.value() +
+            self.black_knights.count_ones() * PieceType::Knight.value() +
+            self.black_rooks.count_ones()   * PieceType::Rook.value()   +
+            self.black_queens.count_ones()  * PieceType::Queen.value()
         }
     }
 }

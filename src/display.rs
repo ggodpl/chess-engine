@@ -8,7 +8,7 @@ impl fmt::Display for Board {
         for i in 0..8 {
             write!(f, "{} ", "abcdefgh".chars().nth(i).unwrap())?;
         }
-        writeln!(f, "")?;
+        writeln!(f)?;
         for rank in 0..8 {
             write!(f, "{} ", 8 - rank)?;
             for file in 0..8 {
@@ -32,7 +32,7 @@ impl fmt::Display for Board {
                     write!(f, ". ")?;
                 }
             }
-            writeln!(f, "")?;
+            writeln!(f)?;
         }
         Ok(())
     }

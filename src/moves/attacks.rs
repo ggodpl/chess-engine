@@ -14,12 +14,10 @@ impl Board {
             } else {
                 0
             }
+        } else if (square & RANK_7) != 0 {
+            ((square << 8) << 8) & self.bb.empty & (mask << 8)
         } else {
-            if (square & RANK_7) != 0 {
-                ((square << 8) << 8) & self.bb.empty & (mask << 8)
-            } else {
-                0
-            }
+            0
         };
 
         let captures_mask = if piece.color == PieceColor::White {

@@ -4,8 +4,8 @@ use crate::{board::Board, piece::{Piece, PieceColor, PieceType}};
 use super::{Move, MoveType};
 
 pub fn create(from: u64, to: u64, promotion: Option<PieceType>, move_type: MoveType, piece_type: PieceType, color: PieceColor) -> Move {
-    let from = from.trailing_zeros() as u32;
-    let to = to.trailing_zeros() as u32;
+    let from = from.trailing_zeros();
+    let to = to.trailing_zeros();
 
     let mut m = from | (to << 6);
 
